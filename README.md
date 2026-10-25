@@ -16,6 +16,8 @@ A [Decky Loader](https://decky.xyz) plugin for the Steam Deck and other handheld
 
 <img src="docs/demo.gif" alt="Moving through the game row and opening All Software" width="100%">
 
+▶️ **[Watch the full demo (88 s)](docs/demo.mp4)**
+
 </div>
 
 ## Features
