@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.zip
+!switch2-dashboard.zip
+__pycache__/
+*.pyc
+.DS_Store
+preview/
+demo/out/

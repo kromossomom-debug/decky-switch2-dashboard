@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Switch 2 Dashboard thumbnail</title>
+<style>
+  html, body { margin: 0; width: 1280px; height: 720px; overflow: hidden; }
+  body {
+    font-family: "Nunito Sans", "Noto Sans", sans-serif; color: #fff;
+    background: radial-gradient(ellipse at 75% 40%, #1d3c45 0%, #121417 55%, #0a0a0b 100%);
+  }
+  .shot {
+    position: absolute; left: 520px; top: 120px; width: 860px; border-radius: 22px;
+    transform: perspective(1400px) rotateY(-14deg) rotateX(3deg);
+    box-shadow: 0 40px 90px rgba(0,0,0,0.7), 0 0 0 4px rgba(0,195,227,0.85), 0 0 60px rgba(0,195,227,0.35);
+  }
+  .text { position: absolute; left: 64px; top: 120px; width: 560px; }
+  .kicker { font-size: 34px; font-weight: 800; color: #00c3e3; letter-spacing: 0.04em; }
+  h1 { margin: 10px 0 0; font-size: 104px; line-height: 0.95; font-weight: 900; letter-spacing: -0.02em; text-shadow: 0 6px 24px rgba(0,0,0,0.6); }
+  h1 span { color: #00c3e3; }
+  .sub { margin-top: 26px; display: inline-block; font-size: 34px; font-weight: 800; padding: 10px 22px; border-radius: 999px; background: #fff; color: #111; }
+  .ring { position: absolute; left: 70px; bottom: 70px; width: 64px; height: 64px; border-radius: 50%;
+    background: conic-gradient(#ff3b3b, #ffb31f, #ffe93b, #3cdc5a, #1fd4ff, #3b6bff, #c23bff, #ff3b3b); }
+  .ring::after { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: #2d2d2d; }
+  .free { position: absolute; left: 150px; bottom: 82px; font-size: 32px; font-weight: 800; }
+</style>
+<img class="shot" src="../docs/screenshots/icons.jpg">
+<div class="text">
+  <div class="kicker">STEAM DECK PLUGIN</div>
+  <h1>SWITCH 2<br><span>HOME</span><br>MENU</h1>
+  <div class="sub">on SteamOS</div>
+</div>
+<div class="ring"></div>
+<div class="free">Free · Decky Loader</div>

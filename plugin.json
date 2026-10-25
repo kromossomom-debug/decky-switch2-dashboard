@@ -1,0 +1,11 @@
+{
+  "name": "Switch 2 Dashboard",
+  "author": "kromossomo",
+  "flags": [],
+  "api_version": 1,
+  "publish": {
+    "tags": ["theme", "style", "switch", "home"],
+    "description": "A Nintendo Switch 2-style HOME Menu for SteamOS Game Mode: status bar, a row of square game tiles with the selected title above, round shortcut buttons and button hints.",
+    "image": "https://raw.githubusercontent.com/kromossomom-debug/decky-switch2-dashboard/main/docs/screenshots/home.jpg"
+  }
+}
