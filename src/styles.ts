@@ -106,7 +106,7 @@ export const HOME_CSS = `
   bottom: calc(100% + 2vh); left: -0.2vh; font-size: 3vh; font-weight: 700;
   max-width: 80vw; overflow: hidden; text-overflow: ellipsis;
 }
-.s2d-running {
+.s2d-badge {
   position: absolute; left: 1.2vh; bottom: 1.2vh; width: 4.4vh; height: 4.4vh; border-radius: 50%;
   background: rgba(0,0,0,0.65); color: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 2.4vh;
@@ -115,6 +115,22 @@ export const HOME_CSS = `
 .s2d-grid { display: grid; grid-template-columns: repeat(3, 4.2vh); gap: 1.1vh; }
 .s2d-grid span { width: 4.2vh; height: 4.2vh; border-radius: 0.9vh; background: var(--sub); }
 .s2d-empty { align-self: center; margin-left: 2vh; font-size: 2.4vh; color: var(--sub); }
+.s2d-archived .s2d-tile-art img { opacity: 0.42; filter: grayscale(0.5); }
+
+/* ---------- All Software: a grid of square tiles, six to a row ---------- */
+.s2d-title { font-size: 3.6vh; font-weight: 800; display: flex; align-items: baseline; gap: 1.6vh; }
+.s2d-count { font-size: 2.4vh; font-weight: 700; color: var(--sub); }
+.s2d-bars .s2d-library .s2d-title, .s2d-bars.s2d-library .s2d-title { font-size: 3vh; }
+.s2d-library-grid {
+  position: absolute; top: 13vh; left: 3vw; right: 3vw; bottom: 10.5vh;
+  border-top: 0.2vh solid var(--line);
+  padding: 7vh 2vw 4vh; overflow: hidden; scroll-behavior: smooth;
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: 3vh; row-gap: 7.5vh; align-content: start;
+}
+.s2d-bars .s2d-library-grid { top: calc(var(--s2d-header, 40px) + 10vh); bottom: 6vh; }
+.s2d-library-grid .s2d-tile { flex: none; width: auto; height: auto; aspect-ratio: 1; }
+.s2d-library-grid .s2d-tile .s2d-label { font-size: 2.5vh; bottom: calc(100% + 1.7vh); }
+.s2d-library-empty { position: absolute; top: 45vh; left: 0; right: 0; text-align: center; margin: 0; }
 
 /* ---------- round icons ---------- */
 .s2d-icons {

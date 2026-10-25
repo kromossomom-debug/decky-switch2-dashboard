@@ -44,10 +44,12 @@ const icons = {
   sleep: svg(md.MdPowerSettingsNew),
   person: svg(md.MdPerson),
   wifi: svg(md.MdWifi),
+  cloud: svg(md.MdCloudDownload),
 };
 
 const html = readFileSync(join(here, "stage.template.html"), "utf8")
   .replace("/*HOME_CSS*/", () => css)
-  .replace("/*ICONS*/", () => `const ICONS = ${JSON.stringify(icons)};`);
+  .replace("/*ICONS*/", () => `const ICONS = ${JSON.stringify(icons)};`)
+  .replace("/*LIBRARY*/", () => `const LIBRARY = ${readFileSync(join(here, "library.json"), "utf8").trim()};`);
 writeFileSync(join(here, "stage.html"), html);
 console.log("Wrote demo/stage.html");

@@ -1,9 +1,10 @@
 import { Focusable, GamepadEvent, NavEntryPositionPreferences, Navigation, classMap } from "@decky/ui";
-import { Component, ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { Component, ReactNode, RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { FaSteam } from "react-icons/fa";
 import {
   MdCast,
   MdChatBubble,
+  MdCloudDownload,
   MdNewspaper,
   MdPerson,
   MdPhotoLibrary,
@@ -19,11 +20,12 @@ import {
 import { t } from "./i18n";
 import { Settings } from "./settings";
 import {
+  ALL_SOFTWARE_ROUTE,
   App,
-  APP_TYPE_SHORTCUT,
   Battery,
   ROUTES,
   isOnline,
+  isPlayable,
   launch,
   onBattery,
   openCommunity,
@@ -39,8 +41,8 @@ import {
 } from "./steam";
 import { HOME_CSS, barsCss } from "./styles";
 
-const FOCUSED = "s2d-focused";
-/** Room kept between the selected tile and the edge of the screen when the row scrolls, in px. */
+export const FOCUSED = "s2d-focused";
+/** Room kept between the selected tile and the edge of the screen when a row or grid scrolls, in px. */
 const EDGE_PAD = 64;
 
 /** An <img> that walks through candidate URLs until one loads, then shows `fallback`. */
@@ -52,6 +54,7 @@ function Art({ sources, fallback }: { sources: string[]; fallback: ReactNode }) 
   return (
     <img
       src={sources[index]}
+      loading="lazy"
       decoding="async"
       draggable={false}
       onError={() => setIndex((i) => i + 1)}
@@ -59,44 +62,76 @@ function Art({ sources, fallback }: { sources: string[]; fallback: ReactNode }) 
   );
 }
 
-/** Scrolls the row just enough to keep `el` (and a bit of the next tile) on screen; returns how far it scrolls. */
-function keepInView(row: HTMLElement, el: HTMLElement): number {
-  const c = row.getBoundingClientRect();
+/**
+ * Scrolls `box` along one axis just enough to keep `el` (and a bit of what's next) on screen; returns how far it
+ * scrolls. Smooth scrolling only reaches the target later, so callers get the distance up front.
+ */
+function keepInView(box: HTMLElement, el: HTMLElement, axis: "x" | "y"): number {
+  const c = box.getBoundingClientRect();
   const r = el.getBoundingClientRect();
+  const [start, end, cStart, cEnd] = axis === "x" ? [r.left, r.right, c.left, c.right] : [r.top, r.bottom, c.top, c.bottom];
   let delta = 0;
-  if (r.left < c.left + EDGE_PAD) delta = r.left - c.left - EDGE_PAD;
-  else if (r.right > c.right - EDGE_PAD) delta = r.right - c.right + EDGE_PAD;
-  const max = row.scrollWidth - row.clientWidth;
-  const target = Math.min(max, Math.max(0, row.scrollLeft + delta));
-  delta = target - row.scrollLeft;
-  // Smooth scrolling: scrollLeft only reaches `target` later, so callers get the distance up front.
-  if (delta) row.scrollLeft = target;
+  if (start < cStart + EDGE_PAD) delta = start - cStart - EDGE_PAD;
+  else if (end > cEnd - EDGE_PAD) delta = end - cEnd + EDGE_PAD;
+  const pos = axis === "x" ? box.scrollLeft : box.scrollTop;
+  const max = axis === "x" ? box.scrollWidth - box.clientWidth : box.scrollHeight - box.clientHeight;
+  const target = Math.min(max, Math.max(0, pos + delta));
+  delta = target - pos;
+  if (delta) {
+    if (axis === "x") box.scrollLeft = target;
+    else box.scrollTop = target;
+  }
   return delta;
 }
 
 /** Slides a long title left so it ends at the screen's edge instead of running off it, like the console. */
-function fitLabel(row: HTMLElement, el: HTMLElement, scrolled: number) {
+function fitLabel(box: HTMLElement, el: HTMLElement, scrolledX: number) {
   const label = el.querySelector<HTMLElement>(":scope > .s2d-label");
   if (!label) return;
   label.style.transform = "";
-  const over = label.getBoundingClientRect().right - scrolled - (row.getBoundingClientRect().right - EDGE_PAD);
+  // The row's and the grid's side padding is where their tiles end, so titles end there too.
+  const edge = box.getBoundingClientRect().right - parseFloat(getComputedStyle(box).paddingRight);
+  const over = label.getBoundingClientRect().right - scrolledX - edge;
   if (over > 0) label.style.transform = `translateX(${-over}px)`;
 }
 
-function Label({ children }: { children: ReactNode }) {
+/**
+ * Steam marks the focused element with `focusClassName`; watching for that class is the one signal that always
+ * arrives, whatever moved the focus. Keeps the selected tile on screen as its row (x) or grid (y) scrolls.
+ */
+export function useFollowFocus(ref: RefObject<HTMLElement | null>, axis: "x" | "y") {
+  useEffect(() => {
+    const box = ref.current;
+    if (!box) return;
+    const observer = new MutationObserver((records) => {
+      for (const rec of records) {
+        const target = rec.target as HTMLElement;
+        const was = (rec.oldValue ?? "").split(" ").includes(FOCUSED);
+        if (was || !target.classList.contains(FOCUSED)) continue;
+        const scrolled = keepInView(box, target, axis);
+        fitLabel(box, target, axis === "x" ? scrolled : 0);
+      }
+    });
+    observer.observe(box, { subtree: true, attributes: true, attributeFilter: ["class"], attributeOldValue: true });
+    return () => observer.disconnect();
+  }, [ref, axis]);
+}
+
+export function Label({ children }: { children: ReactNode }) {
   return <div className="s2d-label">{children}</div>;
 }
 
-function GameTile({ app, art, first }: { app: App; art: Settings["tileArt"]; first: boolean }) {
+/** A square software tile. In All Software, games that aren't installed are dimmed with a cloud, like archived software. */
+export function GameTile({ app, art, first, archive }: { app: App; art: Settings["tileArt"]; first?: boolean; archive?: boolean }) {
   const running = runningAppId() === app.appid;
-  const playable = app.installed || app.app_type === APP_TYPE_SHORTCUT;
+  const playable = isPlayable(app);
+  const archived = archive && !playable;
   return (
     <Focusable
-      className="s2d-tile"
+      className={`s2d-tile ${archived ? "s2d-archived" : ""}`}
       focusClassName={FOCUSED}
       noFocusRing
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      {...({ preferredFocus: first } as any)}
+      preferredFocus={first}
       onActivate={() => launch(app)}
       onOKActionDescription={running ? t.resume : playable ? t.start : t.open}
       onMenuButton={(e: GamepadEvent) => openGameMenu(app, e.currentTarget)}
@@ -107,8 +142,13 @@ function GameTile({ app, art, first }: { app: App; art: Settings["tileArt"]; fir
         <Art sources={tileUrls(app, art)} fallback={<div className="s2d-tile-text">{app.display_name}</div>} />
       </div>
       {running && (
-        <div className="s2d-running">
+        <div className="s2d-badge">
           <MdPlayArrow />
+        </div>
+      )}
+      {archived && (
+        <div className="s2d-badge" title={t.notInstalled}>
+          <MdCloudDownload />
         </div>
       )}
     </Focusable>
@@ -121,9 +161,8 @@ function AllSoftwareTile({ first }: { first: boolean }) {
       className="s2d-tile s2d-all"
       focusClassName={FOCUSED}
       noFocusRing
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      {...({ preferredFocus: first } as any)}
-      onActivate={() => Navigation.Navigate(ROUTES.library)}
+      preferredFocus={first}
+      onActivate={() => Navigation.Navigate(ALL_SOFTWARE_ROUTE)}
       onOKActionDescription={t.open}
     >
       <Label>{t.allSoftware}</Label>
@@ -161,17 +200,9 @@ const SHORTCUTS: Shortcut[] = [
 
 function RoundIcon({ s }: { s: Shortcut }) {
   return (
-    <Focusable
-      className="s2d-icon"
-      focusClassName={FOCUSED}
-      noFocusRing
-      onActivate={s.go}
-      onOKActionDescription={t.open}
-    >
+    <Focusable className="s2d-icon" focusClassName={FOCUSED} noFocusRing onActivate={s.go} onOKActionDescription={t.open}>
       <Label>{s.label}</Label>
-      <div className="s2d-icon-face">
-        {s.icon}
-      </div>
+      <div className="s2d-icon-face">{s.icon}</div>
     </Focusable>
   );
 }
@@ -192,7 +223,7 @@ function useClock(h24: boolean) {
   return { time: `${h}:${m}`, ampm: now.getHours() < 12 ? "AM" : "PM" };
 }
 
-function Tray({ h24 }: { h24: boolean }) {
+export function Tray({ h24 }: { h24: boolean }) {
   const { time, ampm } = useClock(h24);
   const [battery, setBattery] = useState<Battery | null>(null);
   const [online, setOnline] = useState(isOnline);
@@ -247,19 +278,20 @@ function Handheld() {
   );
 }
 
-function Footer() {
+/** Button hints in the footer, as [glyph, label] pairs. */
+export type Hints = [string, ReactNode][];
+
+function Footer({ hints }: { hints: Hints }) {
   return (
     <div className="s2d-footer">
       <Handheld />
       <div className="s2d-hints">
-        <div className="s2d-hint">
-          <span className="s2d-glyph">☰</span>
-          {t.options}
-        </div>
-        <div className="s2d-hint">
-          <span className="s2d-glyph">A</span>
-          {t.start}
-        </div>
+        {hints.map(([glyph, label]) => (
+          <div className="s2d-hint" key={glyph}>
+            <span className="s2d-glyph">{glyph}</span>
+            {label}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -285,28 +317,8 @@ function steamBars(): { header: string[]; footer: string[] } {
   }
 }
 
-/**
- * Steam marks the focused element with `focusClassName`; watching for that class is the one signal that
- * always arrives, whatever moved the focus. Keeps the selected tile on screen as the row scrolls.
- */
-function useFollowFocus(ref: React.RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new MutationObserver((records) => {
-      for (const rec of records) {
-        const target = rec.target as HTMLElement;
-        const was = (rec.oldValue ?? "").split(" ").includes(FOCUSED);
-        if (!was && target.classList.contains(FOCUSED)) fitLabel(el, target, keepInView(el, target));
-      }
-    });
-    observer.observe(el, { subtree: true, attributes: true, attributeFilter: ["class"], attributeOldValue: true });
-    return () => observer.disconnect();
-  }, [ref]);
-}
-
 /** True while `ref` is actually on screen (Steam keeps some pages mounted, hidden, in its back stack). */
-function useVisible(ref: React.RefObject<HTMLElement | null>) {
+function useVisible(ref: RefObject<HTMLElement | null>) {
   const [visible, setVisible] = useState(true);
   useEffect(() => {
     const el = ref.current;
@@ -318,18 +330,28 @@ function useVisible(ref: React.RefObject<HTMLElement | null>) {
   return visible;
 }
 
-export function SwitchHome({ settings }: { settings: Settings }) {
+/** The frame both screens share: theme, stylesheet, Steam's bars hidden while on screen, and the footer. */
+export function Screen({ settings, className, hints, children }: { settings: Settings; className?: string; hints: Hints; children: ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
-  const row = useRef<HTMLDivElement>(null);
   const visible = useVisible(root);
-  const apps = useMemo(() => recentApps(settings.count), [settings.count]);
   const bars = useMemo(steamBars, []);
   const hideBars = settings.hideBars && visible;
-  useFollowFocus(row);
+  return (
+    <div ref={root} className={`s2d-root s2d-${settings.theme} ${settings.hideBars ? "" : "s2d-bars"} ${className ?? ""}`}>
+      <style>{HOME_CSS + (hideBars ? barsCss(bars.header, bars.footer) : "")}</style>
+      {children}
+      {settings.hideBars && <Footer hints={hints} />}
+    </div>
+  );
+}
+
+export function SwitchHome({ settings }: { settings: Settings }) {
+  const row = useRef<HTMLDivElement>(null);
+  const apps = useMemo(() => recentApps(settings.count), [settings.count]);
+  useFollowFocus(row, "x");
 
   return (
-    <div ref={root} className={`s2d-root s2d-${settings.theme} ${settings.hideBars ? "" : "s2d-bars"}`}>
-      <style>{HOME_CSS + (hideBars ? barsCss(bars.header, bars.footer) : "")}</style>
+    <Screen settings={settings} hints={[["☰", t.options], ["A", t.start]]}>
       <Focusable className="s2d-main" flow-children="column">
         <StatusBar h24={settings.clock24} />
         <Focusable ref={row} className="s2d-row" flow-children="row">
@@ -339,30 +361,24 @@ export function SwitchHome({ settings }: { settings: Settings }) {
           <AllSoftwareTile first={apps.length === 0} />
           {apps.length === 0 && <div className="s2d-empty">{t.noSoftware}</div>}
         </Focusable>
-        <Focusable
-          className="s2d-icons"
-          flow-children="row"
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          {...({ navEntryPreferPosition: NavEntryPositionPreferences.MAINTAIN_X } as any)}
-        >
+        <Focusable className="s2d-icons" flow-children="row" navEntryPreferPosition={NavEntryPositionPreferences.MAINTAIN_X}>
           {SHORTCUTS.map((s) => (
             <RoundIcon key={s.id} s={s} />
           ))}
         </Focusable>
       </Focusable>
-      {settings.hideBars && <Footer />}
-    </div>
+    </Screen>
   );
 }
 
-/** If the HOME Menu ever crashes, show `fallback` (Steam's own home) instead of a blank page. */
+/** If a screen ever crashes, show `fallback` (Steam's own) instead of a blank page. */
 export class Fallback extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
   }
   componentDidCatch(error: unknown) {
-    console.error("[switch2-dashboard] HOME Menu crashed, showing Steam's", error);
+    console.error("[switch2-dashboard] screen crashed, showing Steam's", error);
   }
   render() {
     return this.state.failed ? this.props.fallback : this.props.children;

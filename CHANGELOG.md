@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 — 2026-10-25
+
+- **All Software screen.** The All Software tile now opens a Switch-style grid of your whole library: square tiles,
+  six to a row, with the selected title above it. Games that aren't installed are dimmed with a cloud icon, like
+  archived software. **Y** sorts by last played, play time or title; **B** goes back.
+- Long titles in the last column end at the tile's edge.
+
 ## 1.0.0 — 2026-10-25
 
 First release.

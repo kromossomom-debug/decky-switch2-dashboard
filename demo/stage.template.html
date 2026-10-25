@@ -9,8 +9,8 @@
 html, body { margin: 0; background: #0d0d0f; overflow: hidden; }
 body { font-family: "Nunito Sans", "Noto Sans", sans-serif; color: #fff; }
 
-/* The console screen: 1280x800 like the Steam Deck. Its vh units are pinned to that height. */
-#screen { position: absolute; width: 1280px; height: 800px; overflow: hidden; transform-origin: 0 0; }
+/* The console screen: 1280x800 like the Steam Deck. The plugin's vh units are converted to px for it below. */
+#screen { position: absolute; width: 1280px; height: 800px; overflow: hidden; }
 #screen .s2d-root { height: 800px; }
 
 /* Animations are driven by the timeline (see frame()), so every captured frame is exact. */
@@ -18,8 +18,8 @@ body { font-family: "Nunito Sans", "Noto Sans", sans-serif; color: #fff; }
   animation: none !important; border-color: var(--pulse); transform: scale(var(--pop));
 }
 .s2d-icon.s2d-focused::before { animation: none !important; transform: rotate(var(--spin)) scale(var(--pop)); }
-.s2d-row { scroll-behavior: auto; }
-.s2d-hints.s2d-callout .s2d-hint { transform: scale(var(--callout)); transform-origin: center; }
+.s2d-row, .s2d-library-grid { scroll-behavior: auto; }
+.s2d-hints .s2d-hint.s2d-callout { transform: scale(var(--callout)); transform-origin: center; }
 
 /* ---------- video mode: 1920x1080 with captions and title cards ---------- */
 body.video { width: 1920px; height: 1080px; background: radial-gradient(ellipse at 50% 35%, #26262b 0%, #121214 60%, #0b0b0c 100%); }
@@ -66,85 +66,110 @@ body:not(.video) #caption, body:not(.video) .card { display: none; }
 </div>
 <script>
 /*ICONS*/
+/*LIBRARY*/
 
-const GAMES = [
-  [1238860, "Battlefield 4™"],
-  [2542791682, "God of War III"],
-  [3289398709, "Forza Horizon 2"],
-  [460930, "Tom Clancy's Ghost Recon® Wildlands"],
-  [243470, "Watch_Dogs"],
-  [1593500, "God of War"],
-  [1517290, "Battlefield™ 2042"],
-  [1196590, "Resident Evil Village"],
-  [812140, "Assassin's Creed Odyssey"],
-  [582010, "Monster Hunter: World"],
-  [990080, "Hogwarts Legacy"],
-];
+// ---------- data ----------
+// The HOME Menu row: the most recent games (software like DSX is in All Software, not in the row).
+const GAMES = LIBRARY.filter((g) => g.name !== "DSX").slice(0, 11);
 const SHORTCUTS = [
   ["online", "Steam Online"], ["chat", "Chat"], ["news", "News"], ["store", "Steam Store"], ["album", "Album"],
   ["share", "Remote Play"], ["controllers", "Controllers"], ["cards", "Library"], ["settings", "System Settings"],
   ["sleep", "Sleep Mode"],
 ];
+const LIB_TOTAL = 218; // the size of the author's library; the grid shows its 42 most recent titles
 const ALL = GAMES.length; // index of the All Software tile
+const SORT_LABEL = { recent: "Last played", playtime: "Play time", title: "Title" };
+const SORTED = {
+  recent: LIBRARY,
+  playtime: [...LIBRARY].sort((a, b) => b.minutes - a.minutes),
+  title: [...LIBRARY].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" })),
+};
 
 // ---------- timeline (seconds) ----------
-// Focus: [time, row, index]. Rows: "tiles", "icons", "user".
-const FOCUS = [[0, "tiles", 0]];
+const LIB_OPEN = 16.0, LIB_CLOSE = 28.0, D = 13; // the library scene; everything after it moves by D
+const FOCUS = [[0, "tiles", 0]];                      // HOME Menu focus: [time, row, index]
 const at = (t, row, i) => FOCUS.push([t, row, i]);
 for (let i = 1; i <= ALL; i++) at(5.0 + (i - 1) * 0.8, "tiles", i);       // across the row to All Software
-at(16.0, "icons", 9);                                                      // down to the round icons
-for (let i = 8; i >= 0; i--) at(16.0 + (9 - i) * 0.9, "icons", i);         // left across all ten
-at(25.0, "tiles", 8);                                                      // up to the row
-at(25.8, "user", 0);                                                       // up to My Page
-at(30.5, "tiles", 8);                                                      // back down
-for (let i = 7; i >= 0; i--) at(31.0 + (7 - i) * 0.4, "tiles", i);         // quickly back to the first game
-at(37.8, "tiles", 1); at(38.6, "tiles", 2); at(39.4, "tiles", 3);          // white theme
-at(40.4, "icons", 9); at(41.3, "icons", 8); at(42.2, "icons", 7);
-at(45.4, "tiles", 2); at(46.4, "tiles", 1);                                // non-Steam games with custom art
-const THEME = [[0, "black"], [36.8, "white"], [44.8, "black"]];
-const DIPS = [36.5, 44.5];                                                 // short fades around theme changes
+at(16.0 + D, "icons", 9);                                                  // down to the round icons
+for (let i = 8; i >= 0; i--) at(16.0 + D + (9 - i) * 0.9, "icons", i);     // left across all ten
+at(25.0 + D, "tiles", 8);                                                  // up to the row
+at(25.8 + D, "user", 0);                                                   // up to My Page
+at(30.5 + D, "tiles", 8);                                                  // back down
+for (let i = 7; i >= 0; i--) at(31.0 + D + (7 - i) * 0.4, "tiles", i);     // quickly back to the first game
+at(37.8 + D, "tiles", 1); at(38.6 + D, "tiles", 2); at(39.4 + D, "tiles", 3); // white theme
+at(40.4 + D, "icons", 9); at(41.3 + D, "icons", 8); at(42.2 + D, "icons", 7);
+at(45.4 + D, "tiles", 2); at(46.4 + D, "tiles", 1);                        // non-Steam games with custom art
+// All Software: [time, index] and sort changes [time, order]; a new order starts again at the first title.
+const LFOCUS = [[LIB_OPEN, 0], [17.2, 1], [17.9, 2], [18.6, 3], [19.4, 9], [20.2, 15], [21.0, 21], [21.8, 20], [24.5, 0], [26.3, 0]];
+const SORTS = [[0, "recent"], [24.5, "playtime"], [26.3, "title"]];
+const SCREENS = [[0, "home"], [LIB_OPEN, "library"], [LIB_CLOSE, "home"]];
+const THEME = [[0, "black"], [36.8 + D, "white"], [44.8 + D, "black"]];
+const DIPS = [36.5 + D, 44.5 + D];                                          // short fades around theme changes
 const CAPTIONS = [
   [4.5, 9.0, "Your recent games as big <b>square tiles</b>"],
   [9.0, 13.5, "The selected game's name sits above it, with a <b>pulsing frame</b>"],
-  [13.5, 16.0, "<b>All Software</b> opens your full Steam library"],
-  [16.0, 25.0, "<b>Ten round shortcuts</b> in the console's order, each mapped to Steam"],
-  [25.0, 30.5, "Your profile, plus the <b>clock, Wi-Fi and battery</b>"],
-  [30.5, 36.5, "<b>A</b> starts the game · <b>☰</b> opens Steam's game menu"],
-  [36.5, 44.5, "<b>Basic Black</b> and <b>Basic White</b> themes"],
-  [44.5, 50.5, "Custom <b>SteamGridDB</b> art and <b>non-Steam games</b> show up too"],
+  [13.5, 16.3, "Press <b>A</b> on <b>All Software</b>…"],
+  [16.3, 20.6, "…for your <b>whole library</b>, six to a row"],
+  [20.6, 24.3, "Games that aren't installed are <b>dimmed, with a cloud</b>"],
+  [24.3, 28.0, "<b>Y</b> sorts by last played, play time or title · <b>B</b> goes back"],
+  [16.0 + D, 25.0 + D, "<b>Ten round shortcuts</b> in the console's order, each mapped to Steam"],
+  [25.0 + D, 30.5 + D, "Your profile, plus the <b>clock, Wi-Fi and battery</b>"],
+  [30.5 + D, 36.5 + D, "<b>A</b> starts the game · <b>☰</b> opens Steam's game menu"],
+  [36.5 + D, 44.5 + D, "<b>Basic Black</b> and <b>Basic White</b> themes"],
+  [44.5 + D, 50.5 + D, "Custom <b>SteamGridDB</b> art and <b>non-Steam games</b> show up too"],
 ];
-const CALLOUT = [31.0, 36.0];                                              // footer hints pulse while captioned
-const DURATION = 58;
+// Footer hints that pulse while their caption is up: [from, to, screen, glyph].
+const CALLOUTS = [[31.0 + D, 36.0 + D, "home", "☰"], [31.0 + D, 36.0 + D, "home", "A"], [24.4, 27.9, "library", "Y"], [24.4, 27.9, "library", "B"]];
+const OUTRO = 51.6 + D;
+const DURATION = 58 + D;
 
-// ---------- the HOME Menu DOM ----------
+// ---------- the two screens ----------
+const tile = (g, i, row, archive) => `<div class="s2d-tile ${archive && !g.installed ? "s2d-archived" : ""}" data-row="${row}" data-i="${i}"><div class="s2d-label">${g.name}</div><div class="s2d-tile-art">${g.art ? `<img src="assets/${g.appid}.jpg">` : `<div class="s2d-tile-text">${g.name}</div>`}</div>${archive && !g.installed ? `<div class="s2d-badge">${ICONS.cloud}</div>` : ""}</div>`;
+const tray = `<div class="s2d-tray"><div class="s2d-clock">10:09</div><div class="s2d-wifi">${ICONS.wifi}</div><div class="s2d-battery"><span>80%</span><div class="s2d-battery-icon"><div class="s2d-battery-fill" style="width:80%"></div></div></div></div>`;
+const footer = (hints) => `<div class="s2d-footer">
+    <svg class="s2d-handheld" viewBox="0 0 70 36" fill="none" stroke="currentColor" stroke-width="3"><rect x="2" y="2" width="66" height="32" rx="10"/><rect x="18" y="7" width="34" height="22" rx="2"/><circle cx="10" cy="13" r="2.4" fill="currentColor" stroke="none"/><circle cx="60" cy="23" r="2.4" fill="currentColor" stroke="none"/></svg>
+    <div class="s2d-hints">${hints.map(([g, l]) => `<div class="s2d-hint" data-glyph="${g}"><span class="s2d-glyph">${g}</span><span class="s2d-hint-label">${l}</span></div>`).join("")}</div>
+  </div>`;
+
 const screen = document.getElementById("screen");
 screen.innerHTML = `
-<div class="s2d-root s2d-black">
+<div class="s2d-root s2d-black" id="home">
   <div class="s2d-main">
     <div class="s2d-status">
       <div class="s2d-users"><div class="s2d-user" data-row="user" data-i="0"><div class="s2d-label">Player</div>${ICONS.person}</div></div>
-      <div class="s2d-tray">
-        <div class="s2d-clock">10:09</div>
-        <div class="s2d-wifi">${ICONS.wifi}</div>
-        <div class="s2d-battery"><span>80%</span><div class="s2d-battery-icon"><div class="s2d-battery-fill" style="width:80%"></div></div></div>
-      </div>
+      ${tray}
     </div>
     <div class="s2d-row">
-      ${GAMES.map(([id, name], i) => `<div class="s2d-tile" data-row="tiles" data-i="${i}"><div class="s2d-label">${name}</div><div class="s2d-tile-art"><img src="assets/${id}.jpg"></div></div>`).join("")}
+      ${GAMES.map((g, i) => tile(g, i, "tiles", false)).join("")}
       <div class="s2d-tile s2d-all" data-row="tiles" data-i="${ALL}"><div class="s2d-label">All Software</div><div class="s2d-tile-art"><div class="s2d-grid">${"<span></span>".repeat(9)}</div></div></div>
     </div>
     <div class="s2d-icons">
       ${SHORTCUTS.map(([id, label], i) => `<div class="s2d-icon" data-row="icons" data-i="${i}"><div class="s2d-label">${label}</div><div class="s2d-icon-face">${ICONS[id]}</div></div>`).join("")}
     </div>
   </div>
-  <div class="s2d-footer">
-    <svg class="s2d-handheld" viewBox="0 0 70 36" fill="none" stroke="currentColor" stroke-width="3"><rect x="2" y="2" width="66" height="32" rx="10"/><rect x="18" y="7" width="34" height="22" rx="2"/><circle cx="10" cy="13" r="2.4" fill="currentColor" stroke="none"/><circle cx="60" cy="23" r="2.4" fill="currentColor" stroke="none"/></svg>
-    <div class="s2d-hints"><div class="s2d-hint"><span class="s2d-glyph">☰</span>Options</div><div class="s2d-hint"><span class="s2d-glyph">A</span>Start</div></div>
+  ${footer([["☰", "Options"], ["A", "Start"]])}
+</div>
+<div class="s2d-root s2d-black s2d-library" id="library">
+  <div class="s2d-status">
+    <div class="s2d-title">All Software<span class="s2d-count">${LIB_TOTAL}</span></div>
+    ${tray}
   </div>
+  <div class="s2d-library-grid"></div>
+  ${footer([["B", "Back"], ["Y", "Sort: Last played"], ["☰", "Options"], ["A", "Start"]])}
 </div>`;
-const homeRoot = screen.querySelector(".s2d-root");
-const row = screen.querySelector(".s2d-row");
-const hints = screen.querySelector(".s2d-hints");
+const home = document.getElementById("home");
+const library = document.getElementById("library");
+const row = home.querySelector(".s2d-row");
+const grid = library.querySelector(".s2d-library-grid");
+const sortHint = library.querySelector('[data-glyph="Y"] .s2d-hint-label');
+let shownSort = null;
+
+function showSort(order) {
+  if (shownSort === order) return;
+  shownSort = order;
+  grid.innerHTML = SORTED[order].map((g, i) => tile(g, i, "lib", true)).join("");
+  sortHint.textContent = `Sort: ${SORT_LABEL[order]}`;
+}
 
 // ---------- frame rendering ----------
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -152,74 +177,113 @@ const ease = (x) => 1 - Math.pow(1 - clamp(x, 0, 1), 3);
 const lastBefore = (list, t) => { let cur = list[0]; for (const e of list) if (e[0] <= t) cur = e; return cur; };
 const mix = (a, b, k) => a.map((v, i) => Math.round(v + (b[i] - v) * k));
 const PULSE = { black: [[0, 195, 227], [99, 242, 255]], white: [[10, 185, 230], [69, 220, 255]] };
+const EDGE = 64;
 
-/** Row scroll after each focus change, the way the plugin's keepInView does it (64 px edge padding). */
-const scrollPlan = (() => {
-  const plan = [[0, 0]];
+/** Scroll position after a focus change, the way the plugin's keepInView does it (64 px from the edges). */
+function follow(s, a, b, size, max) {
+  if (a - s < EDGE) s = a - EDGE; else if (b - s > size - EDGE) s = b - (size - EDGE);
+  return clamp(s, 0, max);
+}
+/** [time, scroll] for the row and the grid, measured on the real layout once. */
+let rowPlan, gridPlan;
+function plans() {
+  if (rowPlan) return;
+  const tiles = [...row.children];
+  rowPlan = [[0, 0]];
   let s = 0;
-  const step = () => row.children[1].offsetLeft - row.children[0].offsetLeft;
-  return () => {
-    if (plan.length > 1) return plan;
-    const w = row.children[0].offsetWidth, st = step(), pad = 64, view = 1280, maxS = row.scrollWidth - view;
-    for (const [t, r, i] of FOCUS) {
-      if (r !== "tiles") continue;
-      const left = 64 + i * st - s, right = left + w;
-      if (left < pad) s += left - pad; else if (right > view - pad) s += right - (view - pad);
-      s = clamp(s, 0, maxS);
-      plan.push([t, s]);
-    }
-    return plan;
-  };
-})();
-
-function scrollAt(t) {
-  const plan = scrollPlan();
-  let prev = 0, cur = plan[0];
-  for (const e of plan) { if (e[0] <= t) { prev = cur[1]; cur = e; } }
+  for (const [t, r, i] of FOCUS) {
+    if (r !== "tiles") continue;
+    s = follow(s, tiles[i].offsetLeft, tiles[i].offsetLeft + tiles[i].offsetWidth, row.clientWidth, row.scrollWidth - row.clientWidth);
+    rowPlan.push([t, s]);
+  }
+  // The grid's tiles change with the sort order, so it's laid out for each event in turn.
+  gridPlan = [[0, 0]];
+  s = 0;
+  for (const [t, i] of LFOCUS) {
+    const [st, order] = lastBefore(SORTS, t);
+    showSort(order);
+    if (st === t) s = 0; // a new order starts at the top
+    const el = grid.children[i];
+    s = follow(s, el.offsetTop, el.offsetTop + el.offsetHeight, grid.clientHeight, grid.scrollHeight - grid.clientHeight);
+    gridPlan.push([t, s]);
+  }
+}
+function scrollAt(p, t) {
+  let prev = 0, cur = p[0];
+  for (const e of p) if (e[0] <= t) { prev = cur[1]; cur = e; }
   return prev + (cur[1] - prev) * ease((t - cur[0]) / 0.28);
+}
+/** Long titles end where the tiles end (the plugin's fitLabel), measured at the scroll the row is heading to. */
+function fit(box, p, t, axisX) {
+  for (const label of box.querySelectorAll(".s2d-label")) label.style.transform = "";
+  const focused = box.querySelector(".s2d-focused");
+  if (!focused) return;
+  const label = focused.querySelector(".s2d-label");
+  const target = (p.filter((e) => e[0] <= t).pop() ?? [0, 0])[1];
+  const edge = box.getBoundingClientRect().right - parseFloat(getComputedStyle(box).paddingRight);
+  const over = label.getBoundingClientRect().right + (axisX ? box.scrollLeft - target : 0) - edge;
+  if (over > 0) label.style.transform = `translateX(${-over}px)`;
 }
 
 function frame(t) {
+  plans();
+  const shown = lastBefore(SCREENS, t);
+  const theme = lastBefore(THEME, t)[1];
+  for (const root of [home, library]) {
+    root.classList.toggle("s2d-black", theme === "black");
+    root.classList.toggle("s2d-white", theme === "white");
+  }
+  // screen switch: a quick fade with a slight zoom, like opening a menu on the console
+  const k = shown[0] > 0 ? ease((t - shown[0]) / 0.3) : 1;
+  const [incoming, outgoing] = shown[1] === "library" ? [library, home] : [home, library];
+  incoming.style.opacity = String(k);
+  incoming.style.transform = `scale(${1.02 - 0.02 * k})`;
+  incoming.style.zIndex = "2";
+  outgoing.style.opacity = String(1 - k);
+  outgoing.style.transform = "none";
+  outgoing.style.zIndex = "1";
+
   // focus
   const [ft, frow, fi] = lastBefore(FOCUS, t);
-  for (const el of screen.querySelectorAll("[data-row]")) {
+  const [lt, li] = lastBefore(LFOCUS, t);
+  showSort(lastBefore(SORTS, t)[1]);
+  for (const el of home.querySelectorAll("[data-row]")) {
     el.classList.toggle("s2d-focused", el.dataset.row === frow && +el.dataset.i === fi);
   }
-  // theme
-  const theme = lastBefore(THEME, t)[1];
-  homeRoot.classList.toggle("s2d-black", theme === "black");
-  homeRoot.classList.toggle("s2d-white", theme === "white");
+  for (const el of grid.children) el.classList.toggle("s2d-focused", t >= LIB_OPEN && +el.dataset.i === li);
   // animations: pulse (1.1 s), spin (2.4 s), pop (160 ms after each focus change)
   const [lo, hi] = PULSE[theme];
-  const k = (1 - Math.cos((t * 2 * Math.PI) / 1.1)) / 2;
-  homeRoot.style.setProperty("--pulse", `rgb(${mix(lo, hi, k).join(",")})`);
-  homeRoot.style.setProperty("--spin", `${((t / 2.4) % 1) * 360}deg`);
-  homeRoot.style.setProperty("--pop", String(1.06 - 0.06 * ease((t - ft) / 0.16)));
-  // row scroll
-  row.scrollLeft = scrollAt(t);
-  // long titles end at the screen's edge (the plugin's fitLabel), measured at the scroll the row is heading to
-  for (const label of row.querySelectorAll(".s2d-label")) label.style.transform = "";
-  const focused = row.querySelector(".s2d-focused");
-  if (focused) {
-    const label = focused.querySelector(".s2d-label");
-    const target = (scrollPlan().filter((e) => e[0] <= t).pop() ?? [0, 0])[1];
-    const over = label.getBoundingClientRect().right + (row.scrollLeft - target) - (1280 - 64);
-    if (over > 0) label.style.transform = `translateX(${-over}px)`;
+  const pulse = `rgb(${mix(lo, hi, (1 - Math.cos((t * 2 * Math.PI) / 1.1)) / 2).join(",")})`;
+  const lastMove = Math.max(shown[1] === "library" ? lt : ft, shown[0]);
+  for (const root of [home, library]) {
+    root.style.setProperty("--pulse", pulse);
+    root.style.setProperty("--spin", `${((t / 2.4) % 1) * 360}deg`);
+    root.style.setProperty("--pop", String(1.06 - 0.06 * ease((t - lastMove) / 0.16)));
   }
-  // footer callout
-  const inCallout = t >= CALLOUT[0] && t <= CALLOUT[1];
-  hints.classList.toggle("s2d-callout", inCallout);
-  hints.style.setProperty("--callout", inCallout ? String(1 + 0.06 * Math.max(0, Math.sin(((t - CALLOUT[0]) * 2 * Math.PI) / 1.25))) : "1");
+  // scrolling
+  row.scrollLeft = scrollAt(rowPlan, t);
+  grid.scrollTop = scrollAt(gridPlan, t);
+  fit(row, rowPlan, t, true);
+  fit(grid, gridPlan, t, false);
+  // footer callouts
+  for (const root of [home, library]) {
+    const name = root === home ? "home" : "library";
+    for (const hint of root.querySelectorAll(".s2d-hint")) {
+      const c = CALLOUTS.find(([a, b, s, g]) => t >= a && t <= b && s === name && hint.dataset.glyph === g);
+      hint.classList.toggle("s2d-callout", Boolean(c));
+      hint.style.setProperty("--callout", c ? String(1 + 0.07 * Math.max(0, Math.sin(((t - c[0]) * 2 * Math.PI) / 1.25))) : "1");
+    }
+  }
 
   if (!document.body.classList.contains("video")) return;
   // title card, screen fade-in, outro
   const title = document.getElementById("title"), outro = document.getElementById("outro");
   title.style.opacity = String(t < 3.4 ? ease(t / 0.6) : 1 - ease((t - 3.4) / 0.6));
   title.style.transform = `scale(${1 + 0.02 * (t / 4)})`;
-  const sIn = ease((t - 4.0) / 0.8), sOut = 1 - ease((t - 50.5) / 0.8);
+  const sIn = ease((t - 4.0) / 0.8), sOut = 1 - ease((t - (OUTRO - 1.1)) / 0.8);
   screen.style.opacity = String(Math.min(sIn, sOut));
   screen.style.transform = `scale(${1.15 * (0.97 + 0.03 * sIn)})`;
-  outro.style.opacity = String(ease((t - 51.6) / 0.8) * (1 - ease((t - (DURATION - 0.8)) / 0.8)));
+  outro.style.opacity = String(ease((t - OUTRO) / 0.8) * (1 - ease((t - (DURATION - 0.8)) / 0.8)));
   // theme-change dips
   let dip = 0;
   for (const d of DIPS) dip = Math.max(dip, 1 - Math.abs(t - (d + 0.3)) / 0.3);
@@ -237,13 +301,22 @@ function frame(t) {
 
 const params = new URLSearchParams(location.search);
 if (params.get("mode") === "video") document.body.classList.add("video");
-// The stylesheet sizes everything in vh; scale it so 100vh = 800 px inside #screen.
-document.querySelectorAll("style")[0].textContent = document.querySelectorAll("style")[0].textContent.replace(
-  /(-?\d*\.?\d+)vh/g, (_, n) => `${(parseFloat(n) * 8).toFixed(2)}px`);
+// The stylesheet sizes everything in vh; convert to px so 100vh = the 800 px screen, whatever the page size.
+const sheet = document.querySelectorAll("style")[0];
+sheet.textContent = sheet.textContent.replace(/(-?\d*\.?\d+)vh/g, (_, n) => `${(parseFloat(n) * 8).toFixed(2)}px`);
 window.frame = frame;
 window.DURATION = DURATION;
-window.FOCUS = FOCUS;
-window.THEME = THEME;
+// For the soundtrack: focus moves on both screens, sort changes, screen switches, theme changes and the outro.
+const inLibrary = (x) => x >= LIB_OPEN && x < LIB_CLOSE;
+window.EVENTS = {
+  duration: DURATION,
+  focus: [...FOCUS.map((f) => f[0]).filter((x) => !inLibrary(x)), ...LFOCUS.map((f) => f[0]).filter((x) => x > LIB_OPEN)]
+    .filter((x) => x > 0)
+    .sort((a, b) => a - b),
+  screens: SCREENS.map((s) => s[0]).filter((x) => x > 0),
+  theme: THEME.map((x) => x[0]).filter((x) => x > 0),
+  outro: OUTRO,
+};
 window.ready = Promise.all([...document.images].map((i) => i.decode().catch(() => {})));
 frame(parseFloat(params.get("t") ?? "0"));
 </script>

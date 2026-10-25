@@ -13,20 +13,25 @@ import { useState } from "react";
 import { FaCoffee } from "react-icons/fa";
 import { MdHome } from "react-icons/md";
 import { Fallback, SwitchHome } from "./home";
+import { AllSoftware } from "./library";
 import { t } from "./i18n";
 import { DEFAULT_SETTINGS, Settings, withDefaults } from "./settings";
+import { ALL_SOFTWARE_ROUTE } from "./steam";
 
 const getSettings = callable<[], Partial<Settings>>("get_settings");
 const setSettings = callable<[Settings], boolean>("set_settings");
 
 /** Shown in the panel so you can tell which build Steam has loaded. Kept in sync with package.json by scripts/package.sh. */
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const DONATE_URL = "https://buymeacoffee.com/kromossomoc";
 const HOME_ROUTE = "/library/home";
 let settings: Settings = DEFAULT_SETTINGS;
 let unloaded = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let homePatch: any;
+
+/** All Software reads the settings when it opens, so it always matches the HOME Menu's theme. */
+const AllSoftwareRoute = () => <AllSoftware settings={settings} />;
 
 /** Swaps Steam's home for the HOME Menu, or puts Steam's back, to match the settings. */
 function syncHomePatch() {
@@ -127,6 +132,7 @@ function Content() {
 
 export default definePlugin(() => {
   unloaded = false;
+  routerHook.addRoute(ALL_SOFTWARE_ROUTE, AllSoftwareRoute, { exact: true });
   // Patch only once stored settings are in, so a disabled HOME Menu never flashes on at boot.
   getSettings()
     .then((stored) => {
@@ -142,6 +148,7 @@ export default definePlugin(() => {
     onDismount() {
       unloaded = true;
       syncHomePatch();
+      routerHook.removeRoute(ALL_SOFTWARE_ROUTE);
     },
   };
 });

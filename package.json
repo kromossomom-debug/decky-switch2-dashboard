@@ -1,6 +1,6 @@
 {
   "name": "switch2-dashboard",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Makes SteamOS Game Mode look and feel like the Nintendo Switch 2 HOME Menu",
   "type": "module",
   "scripts": {

@@ -29,10 +29,12 @@ if (mode === "shots") {
   const shots = {
     home: 7.2, // Ghost Recon Wildlands selected
     "all-software": 14.5,
-    icons: 19.0, // Controllers
-    "my-page": 27.0,
-    white: 38.9, // Forza Horizon 2
-    "non-steam": 47.5, // God of War III (custom art, non-Steam)
+    library: 17.6, // All Software grid, God of War III selected
+    "library-archived": 22.4, // not-installed games, dimmed with a cloud
+    icons: 19.0 + 13, // Controllers
+    "my-page": 27.0 + 13,
+    white: 38.9 + 13, // Forza Horizon 2
+    "non-steam": 47.5 + 13, // God of War III (custom art, non-Steam)
   };
   for (const [name, t] of Object.entries(shots)) {
     await page.evaluate((t) => window.frame(t), t);
@@ -43,8 +45,9 @@ if (mode === "shots") {
   const out = join(here, "out");
   mkdirSync(out, { recursive: true });
   await open("?mode=video", 1920, 1080);
-  const { duration, focus, theme } = await page.evaluate(() => ({ duration: window.DURATION, focus: window.FOCUS, theme: window.THEME }));
-  writeFileSync(join(out, "events.json"), JSON.stringify({ duration, focus: focus.map((f) => f[0]).filter((t) => t > 0), theme: theme.map((x) => x[0]).filter((t) => t > 0) }));
+  const events = await page.evaluate(() => window.EVENTS);
+  writeFileSync(join(out, "events.json"), JSON.stringify(events));
+  const { duration } = events;
   const ffmpeg = spawn("ffmpeg", [
     "-loglevel", "error", "-y", "-f", "image2pipe", "-framerate", String(FPS), "-c:v", "mjpeg", "-i", "-",
     "-c:v", "libx264", "-preset", "slow", "-crf", "17", "-pix_fmt", "yuv420p", "-movflags", "+faststart",

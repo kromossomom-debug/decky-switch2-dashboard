@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const out = join(dirname(fileURLToPath(import.meta.url)), "out");
-const { duration, focus, theme } = JSON.parse(readFileSync(join(out, "events.json"), "utf8"));
+const { duration, focus, theme, screens, outro } = JSON.parse(readFileSync(join(out, "events.json"), "utf8"));
 const RATE = 48000;
 const N = Math.round(duration * RATE);
 const L = new Float32Array(N);
@@ -59,13 +59,20 @@ for (const t of theme) {
   add(t, 0.25, (x) => 0.12 * Math.exp(-x / 0.08) * Math.sin(2 * Math.PI * 110 * x));
 }
 
+// Opening and closing All Software: a short upward (or downward) blip pair.
+for (const [n, t] of screens.entries()) {
+  const [a, b] = n % 2 === 0 ? [hz(79), hz(86)] : [hz(86), hz(79)];
+  add(t, 0.1, (x) => 0.1 * Math.exp(-x / 0.04) * Math.sin(2 * Math.PI * a * x));
+  add(t + 0.07, 0.14, (x) => 0.1 * Math.exp(-x / 0.05) * Math.sin(2 * Math.PI * b * x));
+}
+
 // Chimes on the title and the outro: a soft bell (fundamental + inharmonic partials).
 const bell = (base) => (t) =>
   Math.exp(-t / 1.1) * (0.09 * Math.sin(2 * Math.PI * base * t) + 0.04 * Math.sin(2 * Math.PI * base * 2.76 * t) + 0.02 * Math.sin(2 * Math.PI * base * 5.4 * t));
 add(0.25, 3, bell(hz(76)));
 add(0.55, 3, bell(hz(83)));
-add(51.7, 3, bell(hz(79)));
-add(52.0, 3, bell(hz(84)));
+add(outro + 0.1, 3, bell(hz(79)));
+add(outro + 0.4, 3, bell(hz(84)));
 
 // 16-bit stereo WAV with a gentle limiter.
 const data = Buffer.alloc(N * 4);

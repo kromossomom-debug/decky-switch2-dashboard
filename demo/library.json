@@ -1,0 +1,296 @@
+[
+ {
+  "appid": 1238860,
+  "name": "Battlefield 4™",
+  "installed": true,
+  "minutes": 3478,
+  "art": true
+ },
+ {
+  "appid": 2542791682,
+  "name": "God of War III",
+  "installed": true,
+  "minutes": 0,
+  "art": true
+ },
+ {
+  "appid": 3289398709,
+  "name": "Forza Horizon 2",
+  "installed": true,
+  "minutes": 0,
+  "art": true
+ },
+ {
+  "appid": 460930,
+  "name": "Tom Clancy's Ghost Recon® Wildlands",
+  "installed": true,
+  "minutes": 163,
+  "art": true
+ },
+ {
+  "appid": 243470,
+  "name": "Watch_Dogs",
+  "installed": false,
+  "minutes": 69,
+  "art": true
+ },
+ {
+  "appid": 1812620,
+  "name": "DSX",
+  "installed": false,
+  "minutes": 8414,
+  "art": true
+ },
+ {
+  "appid": 1593500,
+  "name": "God of War",
+  "installed": false,
+  "minutes": 1282,
+  "art": true
+ },
+ {
+  "appid": 1517290,
+  "name": "Battlefield™ 2042",
+  "installed": false,
+  "minutes": 4502,
+  "art": true
+ },
+ {
+  "appid": 1196590,
+  "name": "Resident Evil Village",
+  "installed": false,
+  "minutes": 930,
+  "art": true
+ },
+ {
+  "appid": 812140,
+  "name": "Assassin's Creed Odyssey",
+  "installed": true,
+  "minutes": 264,
+  "art": true
+ },
+ {
+  "appid": 582010,
+  "name": "Monster Hunter: World",
+  "installed": false,
+  "minutes": 5124,
+  "art": true
+ },
+ {
+  "appid": 990080,
+  "name": "Hogwarts Legacy",
+  "installed": false,
+  "minutes": 952,
+  "art": true
+ },
+ {
+  "appid": 306130,
+  "name": "The Elder Scrolls Online",
+  "installed": false,
+  "minutes": 4747,
+  "art": true
+ },
+ {
+  "appid": 275850,
+  "name": "No Man's Sky",
+  "installed": false,
+  "minutes": 4686,
+  "art": true
+ },
+ {
+  "appid": 1238820,
+  "name": "Battlefield 3™",
+  "installed": false,
+  "minutes": 52,
+  "art": true
+ },
+ {
+  "appid": 1222680,
+  "name": "Need for Speed™ Heat",
+  "installed": false,
+  "minutes": 146,
+  "art": true
+ },
+ {
+  "appid": 1091500,
+  "name": "Cyberpunk 2077",
+  "installed": false,
+  "minutes": 10825,
+  "art": true
+ },
+ {
+  "appid": 730,
+  "name": "Counter-Strike 2",
+  "installed": false,
+  "minutes": 7605,
+  "art": true
+ },
+ {
+  "appid": 1203620,
+  "name": "Enshrouded",
+  "installed": false,
+  "minutes": 204,
+  "art": true
+ },
+ {
+  "appid": 12120,
+  "name": "Grand Theft Auto: San Andreas",
+  "installed": false,
+  "minutes": 85,
+  "art": true
+ },
+ {
+  "appid": 3240220,
+  "name": "Grand Theft Auto V Enhanced",
+  "installed": false,
+  "minutes": 575,
+  "art": true
+ },
+ {
+  "appid": 311210,
+  "name": "Call of Duty: Black Ops III",
+  "installed": false,
+  "minutes": 783,
+  "art": true
+ },
+ {
+  "appid": 240,
+  "name": "Counter-Strike: Source",
+  "installed": true,
+  "minutes": 267,
+  "art": true
+ },
+ {
+  "appid": 1262580,
+  "name": "Need for Speed™ Payback",
+  "installed": false,
+  "minutes": 170,
+  "art": true
+ },
+ {
+  "appid": 208650,
+  "name": "Batman™: Arkham Knight",
+  "installed": false,
+  "minutes": 428,
+  "art": true
+ },
+ {
+  "appid": 851850,
+  "name": "DRAGON BALL Z: KAKAROT",
+  "installed": false,
+  "minutes": 3752,
+  "art": true
+ },
+ {
+  "appid": 12210,
+  "name": "Grand Theft Auto IV: The Complete Edition",
+  "installed": true,
+  "minutes": 145,
+  "art": true
+ },
+ {
+  "appid": 2066020,
+  "name": "Soulstone Survivors",
+  "installed": false,
+  "minutes": 562,
+  "art": true
+ },
+ {
+  "appid": 225540,
+  "name": "Just Cause 3",
+  "installed": false,
+  "minutes": 312,
+  "art": true
+ },
+ {
+  "appid": 489830,
+  "name": "The Elder Scrolls V: Skyrim Special Edition",
+  "installed": false,
+  "minutes": 2960,
+  "art": true
+ },
+ {
+  "appid": 2698940,
+  "name": "The Crew Motorfest",
+  "installed": false,
+  "minutes": 266,
+  "art": true
+ },
+ {
+  "appid": 550,
+  "name": "Left 4 Dead 2",
+  "installed": false,
+  "minutes": 43,
+  "art": true
+ },
+ {
+  "appid": 1817190,
+  "name": "Marvel's Spider-Man: Miles Morales",
+  "installed": false,
+  "minutes": 571,
+  "art": true
+ },
+ {
+  "appid": 2357570,
+  "name": "Overwatch®",
+  "installed": false,
+  "minutes": 14,
+  "art": true
+ },
+ {
+  "appid": 2281730,
+  "name": "Combat Master",
+  "installed": false,
+  "minutes": 393,
+  "art": true
+ },
+ {
+  "appid": 1222690,
+  "name": "Dragon Age™ Inquisition",
+  "installed": false,
+  "minutes": 101,
+  "art": true
+ },
+ {
+  "appid": 1446780,
+  "name": "MONSTER HUNTER RISE",
+  "installed": false,
+  "minutes": 2574,
+  "art": true
+ },
+ {
+  "appid": 298110,
+  "name": "Far Cry 4",
+  "installed": true,
+  "minutes": 96,
+  "art": true
+ },
+ {
+  "appid": 2694490,
+  "name": "Path of Exile 2",
+  "installed": false,
+  "minutes": 496,
+  "art": true
+ },
+ {
+  "appid": 3405690,
+  "name": "EA SPORTS FC™ 26",
+  "installed": false,
+  "minutes": 915,
+  "art": false
+ },
+ {
+  "appid": 899770,
+  "name": "Last Epoch",
+  "installed": false,
+  "minutes": 915,
+  "art": true
+ },
+ {
+  "appid": 2231380,
+  "name": "Ghost Recon Breakpoint",
+  "installed": false,
+  "minutes": 64,
+  "art": true
+ }
+]

@@ -5,6 +5,13 @@
 const en = {
   // HOME Menu
   allSoftware: "All Software",
+  back: "Back",
+  sort: "Sort",
+  sortRecent: "Last played",
+  sortPlaytime: "Play time",
+  sortTitle: "Title",
+  notInstalled: "Not installed",
+  emptyLibrary: "No software yet.",
   myPage: "My Page",
   online: "Steam Online",
   chat: "Chat",
@@ -41,6 +48,13 @@ const en = {
 
 const pt: typeof en = {
   allSoftware: "Todos os jogos",
+  back: "Voltar",
+  sort: "Ordenar",
+  sortRecent: "Jogados recentemente",
+  sortPlaytime: "Tempo de jogo",
+  sortTitle: "Título",
+  notInstalled: "Não instalado",
+  emptyLibrary: "Nenhum jogo ainda.",
   myPage: "Minha página",
   online: "Steam Online",
   chat: "Chat",

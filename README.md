@@ -14,7 +14,7 @@ A [Decky Loader](https://decky.xyz) plugin for the Steam Deck and other handheld
 
 <img src="docs/screenshots/home.jpg" alt="Switch 2 Dashboard HOME Menu with Ghost Recon Wildlands selected" width="100%">
 
-<img src="docs/demo.gif" alt="Moving through the game row and the round shortcut buttons" width="100%">
+<img src="docs/demo.gif" alt="Moving through the game row and opening All Software" width="100%">
 
 </div>
 
@@ -22,9 +22,12 @@ A [Decky Loader](https://decky.xyz) plugin for the Steam Deck and other handheld
 
 - **The HOME Menu layout.** Steam's home becomes the Switch 2 HOME Menu: a status bar on top, a row of big square
   tiles with your recently played games, ten round shortcut buttons under them and a footer with button hints.
-- **Square game tiles.** Up to 12 recent games (4–20, your choice), most recent first, then **All Software**, which
-  opens your Steam library. The selected game's name sits above its tile in cyan, with a pulsing cyan frame around it.
-  Long names slide left so they never run off the screen.
+- **Square game tiles.** Up to 12 recent games (4–20, your choice), most recent first, then **All Software**. The
+  selected game's name sits above its tile in cyan, with a pulsing cyan frame around it. Long names slide left so they
+  never run off the screen.
+- **All Software screen.** Your whole library as a grid of square tiles, six to a row, like the console's. Games that
+  aren't installed are dimmed with a cloud icon, like archived software. **Y** sorts by last played, play time or
+  title; **B** goes back to the HOME Menu.
 - **Ten round shortcuts, in the console's order,** each mapped to its closest Steam feature, with gray symbols and the
   rainbow selection ring:
 
@@ -54,6 +57,7 @@ A [Decky Loader](https://decky.xyz) plugin for the Steam Deck and other handheld
 
 | | |
 |:-:|:-:|
+| <img src="docs/screenshots/library.jpg" alt="All Software grid with God of War III selected"><br>**All Software**: your whole library | <img src="docs/screenshots/library-archived.jpg" alt="All Software grid, Grand Theft Auto V Enhanced selected, not installed"><br>Games that aren't installed get a **cloud** |
 | <img src="docs/screenshots/icons.jpg" alt="Controllers shortcut selected, with the rainbow ring"><br>**Round shortcuts** with the rainbow ring | <img src="docs/screenshots/all-software.jpg" alt="All Software tile selected"><br>**All Software** at the end of the row |
 | <img src="docs/screenshots/white.jpg" alt="Basic White theme, Forza Horizon 2 selected"><br>**Basic White** theme | <img src="docs/screenshots/non-steam.jpg" alt="God of War III, a non-Steam game with custom art, selected"><br>**Non-Steam games** with custom art |
 | <img src="docs/screenshots/my-page.jpg" alt="My Page avatar selected"><br>**My Page**, clock, Wi-Fi and battery | |
@@ -83,9 +87,11 @@ To update, install the new ZIP the same way. Your settings are kept.
 | Button | Where | Action |
 |---|---|---|
 | **A** | Game tile | Start the game (resume it if it's running, open its page if it isn't installed) |
-| **A** | All Software | Open the Steam library |
+| **A** | All Software tile | Open the All Software screen |
+| **Y** | All Software screen | Sort: last played, play time, title |
+| **B** | All Software screen | Back to the HOME Menu |
 | **A** | Round shortcut | Open it |
-| **☰** | Game tile | Steam's game menu: Favorites, Manage, Properties, SteamGridDB's *Change artwork…* |
+| **☰** | Any game tile | Steam's game menu: Favorites, Manage, Properties, SteamGridDB's *Change artwork…* |
 | **D-pad / stick** | Anywhere | Move between the avatar, the game row and the shortcuts |
 
 ## Settings
@@ -105,7 +111,8 @@ Everything lives in the plugin panel in Quick Access. Settings are saved to
 ## How it works
 
 The HOME Menu replaces the `/library/home` route through Decky's router patching. If it ever fails to render, Steam's
-own home is shown instead. Games come from Steam's recent-games collection, artwork from Steam's own image cache
+own home is shown instead. All Software is a route of its own (`/switch2-dashboard/all-software`), so **B** and Steam's
+back navigation work as usual. Games come from Steam's recent-games collection, artwork from Steam's own image cache
 (custom SteamGridDB art first), and **☰** opens Steam's own `LibraryContextMenu`, which is why other plugins' menu
 items show up in it.
 
@@ -132,6 +139,7 @@ npm run build
 src/
   index.tsx    plugin entry, Quick Access panel, route patch
   home.tsx     the HOME Menu: status bar, game row, round shortcuts, footer
+  library.tsx  All Software: the library grid and its sort orders
   steam.ts     Steam data: recent games, artwork, launching, battery, network
   styles.ts    stylesheet for the HOME Menu
   i18n.ts      English and Portuguese text

@@ -12,6 +12,7 @@ export interface App {
   app_type: number;
   installed: boolean;
   rt_last_time_played?: number;
+  minutes_playtime_forever?: number;
 }
 
 const APP_TYPE_GAME = 1;
@@ -21,6 +22,9 @@ const LISTED_TYPES = new Set([APP_TYPE_GAME, APP_TYPE_SOFTWARE, APP_TYPE_SHORTCU
 const CDN = "https://shared.steamstatic.com/store_item_assets/steam/apps";
 /** Steam's ELaunchSource for a launch started from the library. */
 const LAUNCH_SOURCE = 100;
+
+/** The plugin's own All Software screen. */
+export const ALL_SOFTWARE_ROUTE = "/switch2-dashboard/all-software";
 
 export const ROUTES = {
   library: "/library",
@@ -53,6 +57,24 @@ export function recentApps(limit: number): App[] {
   if (list.length === 0) list = collection("type-games").sort(byRecent).filter((a) => a.rt_last_time_played);
   return list.slice(0, limit);
 }
+
+export type SortOrder = "recent" | "playtime" | "title";
+
+const SORTS: Record<SortOrder, (a: App, b: App) => number> = {
+  recent: byRecent,
+  playtime: (a, b) => (b.minutes_playtime_forever ?? 0) - (a.minutes_playtime_forever ?? 0) || byRecent(a, b),
+  title: (a, b) => a.display_name.localeCompare(b.display_name, undefined, { sensitivity: "base" }),
+};
+
+/** All Software: every game and app in the library (Steam's tools, like Proton, are left out). */
+export function libraryApps(sort: SortOrder): App[] {
+  const seen = new Set<number>();
+  return [...collection("type-games"), ...collection("type-software")]
+    .filter((a) => LISTED_TYPES.has(a.app_type) && !seen.has(a.appid) && seen.add(a.appid))
+    .sort(SORTS[sort]);
+}
+
+export const isPlayable = (app: App) => Boolean(app.installed) || app.app_type === APP_TYPE_SHORTCUT;
 
 function custom(fn: string, app: App): string[] {
   try {
@@ -98,8 +120,7 @@ export function openDetails(app: App) {
 
 /** A (Start): launch the game, or go back to it / open its page when it can't start right away. */
 export function launch(app: App) {
-  const playable = app.installed || app.app_type === APP_TYPE_SHORTCUT;
-  if (!playable || runningAppId() === app.appid) {
+  if (!isPlayable(app) || runningAppId() === app.appid) {
     openDetails(app);
     return;
   }
