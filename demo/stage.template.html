@@ -45,6 +45,12 @@ body.video #screen {
   background: rgba(255,255,255,0.08); box-shadow: inset 0 0 0 3px #00c3e3;
 }
 .card .steps { margin-top: 36px; font-size: 30px; color: rgba(255,255,255,0.75); line-height: 1.6; font-weight: 600; }
+.card .coffee {
+  margin-top: 34px; display: inline-flex; align-items: center; gap: 16px; padding: 16px 34px; border-radius: 999px;
+  background: #ffdd00; color: #111; font-size: 34px; font-weight: 800;
+}
+.card .coffee svg { width: 38px; height: 38px; }
+.card .coffee span { font-weight: 600; opacity: 0.75; }
 #dip { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; }
 body:not(.video) #caption, body:not(.video) .card { display: none; }
 </style>
@@ -62,6 +68,7 @@ body:not(.video) #caption, body:not(.video) .card { display: none; }
   <h1>Get it <span>free</span></h1>
   <div class="url">github.com/kromossomom-debug/decky-switch2-dashboard</div>
   <div class="steps">Decky → Developer mode → Install plugin from ZIP</div>
+  <div class="coffee" id="coffee"></div>
   <div class="small">Unofficial fan project. Not affiliated with Nintendo or Valve.</div>
 </div>
 <script>
@@ -86,25 +93,28 @@ const SORTED = {
 };
 
 // ---------- timeline (seconds) ----------
-const LIB_OPEN = 16.0, LIB_CLOSE = 28.0, D = 13; // the library scene; everything after it moves by D
+const LIB_OPEN = 16.0, LIB_CLOSE = 28.0;   // All Software
+const PAGE_OPEN = 40.0, PAGE_CLOSE = 55.8; // My Page
+/** Times of the HOME Menu tour after 16 s, moved past the All Software (+13 s) and My Page (+26 s) scenes. */
+const T = (x) => x + (x < 27 ? 13 : 26);
 const FOCUS = [[0, "tiles", 0]];                      // HOME Menu focus: [time, row, index]
 const at = (t, row, i) => FOCUS.push([t, row, i]);
 for (let i = 1; i <= ALL; i++) at(5.0 + (i - 1) * 0.8, "tiles", i);       // across the row to All Software
-at(16.0 + D, "icons", 9);                                                  // down to the round icons
-for (let i = 8; i >= 0; i--) at(16.0 + D + (9 - i) * 0.9, "icons", i);     // left across all ten
-at(25.0 + D, "tiles", 8);                                                  // up to the row
-at(25.8 + D, "user", 0);                                                   // up to My Page
-at(30.5 + D, "tiles", 8);                                                  // back down
-for (let i = 7; i >= 0; i--) at(31.0 + D + (7 - i) * 0.4, "tiles", i);     // quickly back to the first game
-at(37.8 + D, "tiles", 1); at(38.6 + D, "tiles", 2); at(39.4 + D, "tiles", 3); // white theme
-at(40.4 + D, "icons", 9); at(41.3 + D, "icons", 8); at(42.2 + D, "icons", 7);
-at(45.4 + D, "tiles", 2); at(46.4 + D, "tiles", 1);                        // non-Steam games with custom art
+at(T(16.0), "icons", 9);                                                  // down to the round icons
+for (let i = 8; i >= 0; i--) at(T(16.0) + (9 - i) * 0.9, "icons", i);     // left across all ten
+at(T(25.0), "tiles", 8);                                                  // up to the row
+at(T(25.8), "user", 0);                                                   // up to My Page
+at(T(30.5), "tiles", 8);                                                  // back down
+for (let i = 7; i >= 0; i--) at(T(31.0) + (7 - i) * 0.4, "tiles", i);     // quickly back to the first game
+at(T(37.8), "tiles", 1); at(T(38.6), "tiles", 2); at(T(39.4), "tiles", 3); // white theme
+at(T(40.4), "icons", 9); at(T(41.3), "icons", 8); at(T(42.2), "icons", 7);
+at(T(45.4), "tiles", 2); at(T(46.4), "tiles", 1);                        // non-Steam games with custom art
 // All Software: [time, index] and sort changes [time, order]; a new order starts again at the first title.
 const LFOCUS = [[LIB_OPEN, 0], [17.2, 1], [17.9, 2], [18.6, 3], [19.4, 9], [20.2, 15], [21.0, 21], [21.8, 20], [24.5, 0], [26.3, 0]];
 const SORTS = [[0, "recent"], [24.5, "playtime"], [26.3, "title"]];
-const SCREENS = [[0, "home"], [LIB_OPEN, "library"], [LIB_CLOSE, "home"]];
-const THEME = [[0, "black"], [36.8 + D, "white"], [44.8 + D, "black"]];
-const DIPS = [36.5 + D, 44.5 + D];                                          // short fades around theme changes
+const SCREENS = [[0, "home"], [LIB_OPEN, "library"], [LIB_CLOSE, "home"], [PAGE_OPEN, "mypage"], [PAGE_CLOSE, "home"]];
+const THEME = [[0, "black"], [T(36.8), "white"], [T(44.8), "black"]];
+const DIPS = [T(36.5), T(44.5)];                                          // short fades around theme changes
 const CAPTIONS = [
   [4.5, 9.0, "Your recent games as big <b>square tiles</b>"],
   [9.0, 13.5, "The selected game's name sits above it, with a <b>pulsing frame</b>"],
@@ -112,18 +122,57 @@ const CAPTIONS = [
   [16.3, 20.6, "…for your <b>whole library</b>, six to a row"],
   [20.6, 24.3, "Games that aren't installed are <b>dimmed, with a cloud</b>"],
   [24.3, 28.0, "<b>Y</b> sorts by last played, play time or title · <b>B</b> goes back"],
-  [16.0 + D, 25.0 + D, "<b>Ten round shortcuts</b> in the console's order, each mapped to Steam"],
-  [25.0 + D, 30.5 + D, "Your profile, plus the <b>clock, Wi-Fi and battery</b>"],
-  [30.5 + D, 36.5 + D, "<b>A</b> starts the game · <b>☰</b> opens Steam's game menu"],
-  [36.5 + D, 44.5 + D, "<b>Basic Black</b> and <b>Basic White</b> themes"],
-  [44.5 + D, 50.5 + D, "Custom <b>SteamGridDB</b> art and <b>non-Steam games</b> show up too"],
+  [T(16.0), T(25.0), "<b>Ten round shortcuts</b> in the console's order, each mapped to Steam"],
+  [T(25.0), 40.3, "<b>Clock, Wi-Fi and battery</b> up top · <b>A</b> on your icon…"],
+  [40.3, 45.2, "…opens <b>My Page</b>: profile, friend code and <b>play activity</b>"],
+  [45.2, 49.6, "<b>Friend List</b>: who's online and what they're playing"],
+  [49.6, 51.0, "<b>Add Friend</b> with your Steam friend code"],
+  [51.0, PAGE_CLOSE, "<b>User Settings</b>: profile, icon, privacy and account · <b>B</b> goes back"],
+  [T(30.5), T(36.5), "<b>A</b> starts the game · <b>☰</b> opens Steam's game menu"],
+  [T(36.5), T(44.5), "<b>Basic Black</b> and <b>Basic White</b> themes"],
+  [T(44.5), T(50.5), "Custom <b>SteamGridDB</b> art and <b>non-Steam games</b> show up too"],
+  [T(50.5), T(50.5) + 4, "Quick Access → Decky: theme, tile art, row size and <b>12/24-hour clock</b>"],
 ];
+// My Page: [time, area, index]; the menu's focus picks the section on the right, like the console.
+const PFOCUS = [[PAGE_OPEN, "menu", 0], [41.6, "pane", 0], [42.3, "pane", 1], [43.0, "pane", 2], [43.7, "pane", 3], [44.4, "pane", 4],
+  [45.2, "menu", 0], [45.9, "menu", 1], [46.8, "pane", 0], [47.5, "pane", 1], [48.2, "pane", 5], [49.0, "menu", 1],
+  [49.6, "menu", 2], [51.0, "menu", 3], [52.0, "pane", 0], [52.7, "pane", 1], [53.4, "pane", 2], [54.1, "pane", 3]];
+const CLOCK = [[0, "24"], [T(50.5) + 1.6, "12"]];
 // Footer hints that pulse while their caption is up: [from, to, screen, glyph].
-const CALLOUTS = [[31.0 + D, 36.0 + D, "home", "☰"], [31.0 + D, 36.0 + D, "home", "A"], [24.4, 27.9, "library", "Y"], [24.4, 27.9, "library", "B"]];
-const OUTRO = 51.6 + D;
-const DURATION = 58 + D;
+const CALLOUTS = [[T(31.0), T(36.0), "home", "☰"], [T(31.0), T(36.0), "home", "A"], [24.4, 27.9, "library", "Y"], [24.4, 27.9, "library", "B"], [51.0, PAGE_CLOSE - 0.1, "mypage", "B"]];
+const OUTRO = T(50.5) + 5.1;
+const DURATION = OUTRO + 6.4;
 
-// ---------- the two screens ----------
+// My Page sample data: your play activity comes from the library above; the friends are made up for the demo.
+const FRIEND_CODE = "87654321";
+const ACTIVITY = LIBRARY.slice(0, 12).map((g, i) => ({
+  ...g,
+  played: g.minutes < 60 ? "Played for less than an hour" : `Played for ${Math.floor(g.minutes / 60)} hours or more`,
+  last: i === 0 ? "today" : i === 1 ? "yesterday" : `${i + 1} days ago`,
+}));
+const FRIENDS = [
+  ["Rafa", "playing", "Playing Counter-Strike 2", "#e4572e"],
+  ["Bia", "playing", "Playing Hogwarts Legacy", "#8e5cd9"],
+  ["Caio", "online", "Online", "#2a9d8f"],
+  ["Duda", "online", "Online", "#e9a23b"],
+  ["Enzo", "", "Last online 2 hours ago", "#3a86ff"],
+  ["Lia", "", "Last online yesterday", "#ef476f"],
+  ["Nina", "", "Last online 3 days ago", "#06a77d"],
+  ["Teo", "", "Last online 5 days ago", "#6c757d"],
+];
+const MENU = [["profile", "Profile", ICONS.person], ["friends", "Friend List", ICONS.people], ["add", "Add Friend", ICONS.personAdd], ["settings", "User Settings", ICONS.gear]];
+const option = (title, sub, art) => `<div class="s2d-option">${art ? `<div class="s2d-option-art"><img src="assets/${art}.jpg"></div>` : ""}<div class="s2d-option-text"><div class="s2d-option-title">${title}</div>${sub ? `<div class="s2d-option-sub">${sub}</div>` : ""}</div>${art ? "" : `<span class="s2d-chevron">${ICONS.chevron}</span>`}</div>`;
+const PANES = {
+  profile: `<div class="s2d-profile"><div class="s2d-profile-avatar">${ICONS.person}</div><div><div class="s2d-profile-name">Player</div><div class="s2d-presence s2d-online">Online</div><div class="s2d-profile-code">Friend code: <b>${FRIEND_CODE}</b></div></div></div>
+    <div class="s2d-section">Play Activity</div>
+    ${ACTIVITY.map((g) => option(g.name, `${g.played} · Last played: ${g.last}`, g.art ? g.appid : null)).join("")}`,
+  friends: `<div class="s2d-friends">${FRIENDS.map(([n, kind, status, color]) => `<div class="s2d-friend ${kind ? "s2d-" + kind : ""}"><div class="s2d-friend-avatar" style="background:${color};color:#fff">${ICONS.person}</div><div class="s2d-friend-name">${n}</div><div class="s2d-friend-status">${status}</div></div>`).join("")}</div>`,
+  add: `<div class="s2d-code-box"><div class="s2d-code-label">Friend code</div><div class="s2d-code">${FRIEND_CODE}</div></div>
+    ${option("Search with friend code")}${option("Received friend requests (2)")}${option("Sent friend requests")}`,
+  settings: `${option("Edit profile")}${option("Change icon")}${option("Privacy settings")}${option("Steam account")}`,
+};
+
+// ---------- the three screens ----------
 const tile = (g, i, row, archive) => `<div class="s2d-tile ${archive && !g.installed ? "s2d-archived" : ""}" data-row="${row}" data-i="${i}"><div class="s2d-label">${g.name}</div><div class="s2d-tile-art">${g.art ? `<img src="assets/${g.appid}.jpg">` : `<div class="s2d-tile-text">${g.name}</div>`}</div>${archive && !g.installed ? `<div class="s2d-badge">${ICONS.cloud}</div>` : ""}</div>`;
 const tray = `<div class="s2d-tray"><div class="s2d-clock">10:09</div><div class="s2d-wifi">${ICONS.wifi}</div><div class="s2d-battery"><span>80%</span><div class="s2d-battery-icon"><div class="s2d-battery-fill" style="width:80%"></div></div></div></div>`;
 const footer = (hints) => `<div class="s2d-footer">
@@ -156,13 +205,40 @@ screen.innerHTML = `
   </div>
   <div class="s2d-library-grid"></div>
   ${footer([["B", "Back"], ["Y", "Sort: Last played"], ["☰", "Options"], ["A", "Start"]])}
+</div>
+<div class="s2d-root s2d-black s2d-mypage" id="mypage">
+  <div class="s2d-status">
+    <div class="s2d-title"><div class="s2d-title-avatar">${ICONS.person}</div>Player's Page</div>
+    ${tray}
+  </div>
+  <div class="s2d-page">
+    <div class="s2d-menu">${MENU.map(([id, label, icon], i) => `<div class="s2d-menu-item" data-tab="${id}" data-i="${i}">${icon}${label}</div>`).join("")}</div>
+    <div class="s2d-pane"></div>
+  </div>
+  ${footer([["B", "Back"], ["A", "OK"]])}
 </div>`;
+document.getElementById("coffee").innerHTML = `${ICONS.coffee} Buy me a coffee <span>buymeacoffee.com/kromossomoc</span>`;
 const home = document.getElementById("home");
 const library = document.getElementById("library");
 const row = home.querySelector(".s2d-row");
 const grid = library.querySelector(".s2d-library-grid");
 const sortHint = library.querySelector('[data-glyph="Y"] .s2d-hint-label');
+const mypage = document.getElementById("mypage");
+const pane = mypage.querySelector(".s2d-pane");
+const menuItems = [...mypage.querySelectorAll(".s2d-menu-item")];
+const SCREEN_EL = { home, library, mypage };
 let shownSort = null;
+let shownTab = null;
+
+function showTab(tab) {
+  if (shownTab === tab) return;
+  shownTab = tab;
+  pane.innerHTML = PANES[tab];
+  for (const el of menuItems) el.classList.toggle("s2d-active", el.dataset.tab === tab);
+}
+/** My Page's section: the one the menu last had focus on. */
+const tabAt = (t) => MENU[lastBefore(PFOCUS.filter((e) => e[1] === "menu"), t)[2]][0];
+const paneItems = () => [...pane.querySelectorAll(".s2d-option, .s2d-friend")];
 
 function showSort(order) {
   if (shownSort === order) return;
@@ -185,7 +261,7 @@ function follow(s, a, b, size, max) {
   return clamp(s, 0, max);
 }
 /** [time, scroll] for the row and the grid, measured on the real layout once. */
-let rowPlan, gridPlan;
+let rowPlan, gridPlan, panePlan;
 function plans() {
   if (rowPlan) return;
   const tiles = [...row.children];
@@ -206,6 +282,18 @@ function plans() {
     const el = grid.children[i];
     s = follow(s, el.offsetTop, el.offsetTop + el.offsetHeight, grid.clientHeight, grid.scrollHeight - grid.clientHeight);
     gridPlan.push([t, s]);
+  }
+  // My Page's right side scrolls only within a section; a new section starts at the top.
+  panePlan = [[0, 0]];
+  s = 0;
+  let tab = null;
+  for (const [t, area, i] of PFOCUS) {
+    if (tabAt(t) !== tab) { tab = tabAt(t); s = 0; showTab(tab); }
+    if (area === "pane") {
+      const el = paneItems()[i];
+      s = follow(s, el.offsetTop, el.offsetTop + el.offsetHeight, pane.clientHeight, pane.scrollHeight - pane.clientHeight);
+    }
+    panePlan.push([t, s]);
   }
 }
 function scrollAt(p, t) {
@@ -229,19 +317,27 @@ function frame(t) {
   plans();
   const shown = lastBefore(SCREENS, t);
   const theme = lastBefore(THEME, t)[1];
-  for (const root of [home, library]) {
+  for (const root of Object.values(SCREEN_EL)) {
     root.classList.toggle("s2d-black", theme === "black");
     root.classList.toggle("s2d-white", theme === "white");
+    root.style.opacity = "0";
+    root.style.zIndex = "0";
   }
   // screen switch: a quick fade with a slight zoom, like opening a menu on the console
   const k = shown[0] > 0 ? ease((t - shown[0]) / 0.3) : 1;
-  const [incoming, outgoing] = shown[1] === "library" ? [library, home] : [home, library];
+  const previous = SCREENS[Math.max(0, SCREENS.indexOf(shown) - 1)];
+  const incoming = SCREEN_EL[shown[1]], outgoing = SCREEN_EL[previous[1]];
+  if (outgoing !== incoming) {
+    outgoing.style.opacity = String(1 - k);
+    outgoing.style.transform = "none";
+    outgoing.style.zIndex = "1";
+  }
   incoming.style.opacity = String(k);
   incoming.style.transform = `scale(${1.02 - 0.02 * k})`;
   incoming.style.zIndex = "2";
-  outgoing.style.opacity = String(1 - k);
-  outgoing.style.transform = "none";
-  outgoing.style.zIndex = "1";
+  // clock: 24-hour, then 12-hour once the settings caption mentions it
+  const h12 = lastBefore(CLOCK, t)[1] === "12";
+  for (const c of screen.querySelectorAll(".s2d-clock")) c.innerHTML = h12 ? '10:09<span class="s2d-ampm">AM</span>' : "10:09";
 
   // focus
   const [ft, frow, fi] = lastBefore(FOCUS, t);
@@ -251,11 +347,15 @@ function frame(t) {
     el.classList.toggle("s2d-focused", el.dataset.row === frow && +el.dataset.i === fi);
   }
   for (const el of grid.children) el.classList.toggle("s2d-focused", t >= LIB_OPEN && +el.dataset.i === li);
+  const [pt, parea, pi] = lastBefore(PFOCUS, t);
+  showTab(tabAt(t));
+  for (const el of menuItems) el.classList.toggle("s2d-focused", t >= PAGE_OPEN && parea === "menu" && +el.dataset.i === pi);
+  paneItems().forEach((el, i) => el.classList.toggle("s2d-focused", t >= PAGE_OPEN && parea === "pane" && i === pi));
   // animations: pulse (1.1 s), spin (2.4 s), pop (160 ms after each focus change)
   const [lo, hi] = PULSE[theme];
   const pulse = `rgb(${mix(lo, hi, (1 - Math.cos((t * 2 * Math.PI) / 1.1)) / 2).join(",")})`;
-  const lastMove = Math.max(shown[1] === "library" ? lt : ft, shown[0]);
-  for (const root of [home, library]) {
+  const lastMove = Math.max({ library: lt, mypage: pt, home: ft }[shown[1]], shown[0]);
+  for (const root of Object.values(SCREEN_EL)) {
     root.style.setProperty("--pulse", pulse);
     root.style.setProperty("--spin", `${((t / 2.4) % 1) * 360}deg`);
     root.style.setProperty("--pop", String(1.06 - 0.06 * ease((t - lastMove) / 0.16)));
@@ -263,11 +363,11 @@ function frame(t) {
   // scrolling
   row.scrollLeft = scrollAt(rowPlan, t);
   grid.scrollTop = scrollAt(gridPlan, t);
+  pane.scrollTop = scrollAt(panePlan, t);
   fit(row, rowPlan, t, true);
   fit(grid, gridPlan, t, false);
   // footer callouts
-  for (const root of [home, library]) {
-    const name = root === home ? "home" : "library";
+  for (const [name, root] of Object.entries(SCREEN_EL)) {
     for (const hint of root.querySelectorAll(".s2d-hint")) {
       const c = CALLOUTS.find(([a, b, s, g]) => t >= a && t <= b && s === name && hint.dataset.glyph === g);
       hint.classList.toggle("s2d-callout", Boolean(c));
@@ -307,10 +407,10 @@ sheet.textContent = sheet.textContent.replace(/(-?\d*\.?\d+)vh/g, (_, n) => `${(
 window.frame = frame;
 window.DURATION = DURATION;
 // For the soundtrack: focus moves on both screens, sort changes, screen switches, theme changes and the outro.
-const inLibrary = (x) => x >= LIB_OPEN && x < LIB_CLOSE;
+const inLibrary = (x) => (x >= LIB_OPEN && x < LIB_CLOSE) || (x >= PAGE_OPEN && x < PAGE_CLOSE);
 window.EVENTS = {
   duration: DURATION,
-  focus: [...FOCUS.map((f) => f[0]).filter((x) => !inLibrary(x)), ...LFOCUS.map((f) => f[0]).filter((x) => x > LIB_OPEN)]
+  focus: [...FOCUS.map((f) => f[0]).filter((x) => !inLibrary(x)), ...LFOCUS.map((f) => f[0]).filter((x) => x > LIB_OPEN), ...PFOCUS.map((f) => f[0]).filter((x) => x > PAGE_OPEN), ...CLOCK.map((c) => c[0])]
     .filter((x) => x > 0)
     .sort((a, b) => a - b),
   screens: SCREENS.map((s) => s[0]).filter((x) => x > 0),

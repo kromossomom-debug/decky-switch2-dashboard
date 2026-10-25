@@ -44,8 +44,16 @@ A [Decky Loader](https://decky.xyz) plugin for the Steam Deck and other handheld
   | System Settings | **System Settings** |
   | Sleep Mode | **Sleep Mode** (suspends right away) |
 
-- **Status bar.** Your Steam avatar on the left (**My Page** opens your profile). The clock, Wi-Fi and battery level on
-  the right are live: the battery turns green while charging and red when low.
+- **Status bar.** Your Steam avatar on the left; the clock, Wi-Fi and battery level on the right are live: the battery
+  turns green while charging and red when low.
+- **My Page.** Press **A** on your avatar for the console's user page: a menu on the left that fills the right side as
+  you move through it.
+  - **Profile:** your avatar, name, status and Steam friend code, and your **Play Activity**: each game with
+    "Played for X hours or more" and when you last played it.
+  - **Friend List:** your Steam friends as round icons, the ones playing first, with what they're playing or when they
+    were last online. **A** opens Friends & Chat.
+  - **Add Friend:** your friend code in big type, search by friend code and your received and sent friend requests.
+  - **User Settings:** edit your profile, change your icon, privacy settings and your Steam account.
 - **Footer.** A handheld icon on the left and **☰ Options · A Start** on the right. Steam's own top and bottom bars
   are hidden on the HOME Menu only, and come back everywhere else.
 - **Basic Black and Basic White themes,** like the console's.
@@ -57,14 +65,16 @@ A [Decky Loader](https://decky.xyz) plugin for the Steam Deck and other handheld
 
 | | |
 |:-:|:-:|
+| <img src="docs/screenshots/my-page-profile.jpg" alt="My Page: profile, friend code and play activity"><br>**My Page**: profile and play activity | <img src="docs/screenshots/my-page-friends.jpg" alt="My Page: Friend List"><br>**Friend List** |
+| <img src="docs/screenshots/my-page-add.jpg" alt="My Page: Add Friend with the friend code"><br>**Add Friend** with your friend code | <img src="docs/screenshots/my-page-settings.jpg" alt="My Page: User Settings"><br>**User Settings** |
 | <img src="docs/screenshots/library.jpg" alt="All Software grid with God of War III selected"><br>**All Software**: your whole library | <img src="docs/screenshots/library-archived.jpg" alt="All Software grid, Grand Theft Auto V Enhanced selected, not installed"><br>Games that aren't installed get a **cloud** |
 | <img src="docs/screenshots/icons.jpg" alt="Controllers shortcut selected, with the rainbow ring"><br>**Round shortcuts** with the rainbow ring | <img src="docs/screenshots/all-software.jpg" alt="All Software tile selected"><br>**All Software** at the end of the row |
 | <img src="docs/screenshots/white.jpg" alt="Basic White theme, Forza Horizon 2 selected"><br>**Basic White** theme | <img src="docs/screenshots/non-steam.jpg" alt="God of War III, a non-Steam game with custom art, selected"><br>**Non-Steam games** with custom art |
-| <img src="docs/screenshots/my-page.jpg" alt="My Page avatar selected"><br>**My Page**, clock, Wi-Fi and battery | |
+| <img src="docs/screenshots/my-page.jpg" alt="Your icon selected on the HOME Menu"><br>Your **icon**, clock, Wi-Fi and battery | |
 
 > These screenshots are rendered from the plugin's own stylesheet and icons at the Steam Deck's 1280×800 resolution,
-> with the author's library as sample data (`demo/` has the scene and the renderer). Your avatar shows instead of the
-> placeholder.
+> with the author's library as sample data (`demo/` has the scene and the renderer). The friends and the friend code are
+> made up for the demo; on your Deck you see your own avatar, friends and code.
 
 ## Installation
 
@@ -91,6 +101,9 @@ To update, install the new ZIP the same way. Your settings are kept.
 | **Y** | All Software screen | Sort: last played, play time, title |
 | **B** | All Software screen | Back to the HOME Menu |
 | **A** | Round shortcut | Open it |
+| **A** | Your icon | Open My Page |
+| **D-pad** | My Page menu | Switch between Profile, Friend List, Add Friend and User Settings |
+| **B** | My Page | Back to the HOME Menu |
 | **☰** | Any game tile | Steam's game menu: Favorites, Manage, Properties, SteamGridDB's *Change artwork…* |
 | **D-pad / stick** | Anywhere | Move between the avatar, the game row and the shortcuts |
 
@@ -111,8 +124,10 @@ Everything lives in the plugin panel in Quick Access. Settings are saved to
 ## How it works
 
 The HOME Menu replaces the `/library/home` route through Decky's router patching. If it ever fails to render, Steam's
-own home is shown instead. All Software is a route of its own (`/switch2-dashboard/all-software`), so **B** and Steam's
-back navigation work as usual. Games come from Steam's recent-games collection, artwork from Steam's own image cache
+own home is shown instead. All Software and My Page are routes of their own (`/switch2-dashboard/all-software`,
+`/switch2-dashboard/my-page`), so **B** and Steam's back navigation work as usual. My Page reads Steam's friends store:
+your status and your friends' come in Steam's own words and language, and the friend code is your Steam account ID,
+the number Steam's "Add a friend" asks for. Games come from Steam's recent-games collection, artwork from Steam's own image cache
 (custom SteamGridDB art first), and **☰** opens Steam's own `LibraryContextMenu`, which is why other plugins' menu
 items show up in it.
 
@@ -140,6 +155,7 @@ src/
   index.tsx    plugin entry, Quick Access panel, route patch
   home.tsx     the HOME Menu: status bar, game row, round shortcuts, footer
   library.tsx  All Software: the library grid and its sort orders
+  mypage.tsx   My Page: profile, play activity, friends, add friend, user settings
   steam.ts     Steam data: recent games, artwork, launching, battery, network
   styles.ts    stylesheet for the HOME Menu
   i18n.ts      English and Portuguese text

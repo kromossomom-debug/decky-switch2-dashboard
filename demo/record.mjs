@@ -31,10 +31,14 @@ if (mode === "shots") {
     "all-software": 14.5,
     library: 17.6, // All Software grid, God of War III selected
     "library-archived": 22.4, // not-installed games, dimmed with a cloud
-    icons: 19.0 + 13, // Controllers
-    "my-page": 27.0 + 13,
-    white: 38.9 + 13, // Forza Horizon 2
-    "non-steam": 47.5 + 13, // God of War III (custom art, non-Steam)
+    icons: 32.0, // Controllers
+    "my-page": 39.5, // your icon on the HOME Menu
+    "my-page-profile": 43.5, // My Page: profile and play activity
+    "my-page-friends": 47.9, // Friend List
+    "my-page-add": 50.4, // Add Friend
+    "my-page-settings": 53.1, // User Settings
+    white: 64.9, // Forza Horizon 2
+    "non-steam": 73.5, // God of War III (custom art, non-Steam)
   };
   for (const [name, t] of Object.entries(shots)) {
     await page.evaluate((t) => window.frame(t), t);

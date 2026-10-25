@@ -10,7 +10,8 @@ export const HOME_CSS = `
   --line: rgba(255,255,255,0.32);
   --circle: #3c3c3c;
   --glyph: #b4b4b4;
-  --card: #404040;
+  --card: #3a3a3a;
+  --panel: #383838;
   --gap: #2d2d2d;
   --accent: #00c3e3;
   --accent-hi: #63f2ff;
@@ -30,6 +31,7 @@ export const HOME_CSS = `
   --circle: #ffffff;
   --glyph: #6e6e6e;
   --card: #dcdcdc;
+  --panel: #ffffff;
   --gap: #ebebeb;
   --accent: #0ab9e6;
   --accent-hi: #45dcff;
@@ -131,6 +133,96 @@ export const HOME_CSS = `
 .s2d-library-grid .s2d-tile { flex: none; width: auto; height: auto; aspect-ratio: 1; }
 .s2d-library-grid .s2d-tile .s2d-label { font-size: 2.5vh; bottom: calc(100% + 1.7vh); }
 .s2d-library-empty { position: absolute; top: 45vh; left: 0; right: 0; text-align: center; margin: 0; }
+
+/* ---------- My Page: menu on the left, the selected section on the right ---------- */
+.s2d-title-avatar {
+  width: 5.6vh; height: 5.6vh; border-radius: 50%; overflow: hidden; align-self: center;
+  background: var(--circle); color: var(--sub); display: flex; align-items: center; justify-content: center; font-size: 3.4vh;
+}
+.s2d-title-avatar img, .s2d-profile-avatar img, .s2d-friend-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.s2d-page {
+  position: absolute; top: 13vh; left: 3vw; right: 3vw; bottom: 10.5vh;
+  border-top: 0.2vh solid var(--line); display: flex;
+}
+.s2d-bars .s2d-page { top: calc(var(--s2d-header, 40px) + 10vh); bottom: 6vh; }
+.s2d-menu {
+  flex: 0 0 31%; padding: 3vh 2.4vh 3vh 1vh; border-right: 0.2vh solid var(--line);
+  display: flex; flex-direction: column; gap: 1.2vh;
+}
+.s2d-menu-item {
+  position: relative; height: 8.2vh; padding: 0 2.4vh; border-radius: 1.2vh;
+  display: flex; align-items: center; gap: 2.2vh; font-size: 2.7vh; font-weight: 700; color: var(--text);
+}
+.s2d-menu-item svg { font-size: 3.6vh; color: var(--glyph); flex: none; }
+.s2d-menu-item.s2d-active { background: var(--panel); }
+.s2d-menu-item.s2d-active::before {
+  content: ""; position: absolute; left: 0; top: 1.6vh; bottom: 1.6vh; width: 0.6vh; border-radius: 0.3vh; background: var(--accent);
+}
+.s2d-pane { flex: 1; min-width: 0; position: relative; overflow: hidden; scroll-behavior: smooth; padding: 3.4vh 3vw 6vh 4vh; }
+
+.s2d-menu-item::after, .s2d-option::after {
+  content: ""; position: absolute; inset: -0.9vh; border-radius: 2.1vh;
+  border: 0.55vh solid var(--accent); opacity: 0; pointer-events: none;
+}
+.s2d-menu-item.s2d-focused::after, .s2d-option.s2d-focused::after {
+  opacity: 1; animation: s2d-pulse 1.1s ease-in-out infinite, s2d-pop 160ms ease-out;
+}
+
+.s2d-profile { display: flex; align-items: center; gap: 4vh; margin-bottom: 3.6vh; }
+.s2d-profile-avatar {
+  flex: none; width: 17vh; height: 17vh; border-radius: 50%; overflow: hidden;
+  background: var(--circle); color: var(--sub); display: flex; align-items: center; justify-content: center; font-size: 10vh;
+  box-shadow: 0 0 0 0.6vh var(--panel);
+}
+.s2d-profile-name { font-size: 4.6vh; font-weight: 800; line-height: 1.1; }
+.s2d-presence { margin-top: 1vh; font-size: 2.3vh; font-weight: 700; color: var(--sub); display: flex; align-items: center; gap: 1vh; }
+.s2d-presence.s2d-online { color: #3ccf4e; }
+.s2d-presence.s2d-online::before { content: ""; width: 1.2vh; height: 1.2vh; border-radius: 50%; background: currentColor; }
+.s2d-profile-code { margin-top: 1.2vh; font-size: 2.3vh; color: var(--sub); }
+.s2d-profile-code b { color: var(--text); letter-spacing: 0.06em; }
+.s2d-section {
+  font-size: 2.5vh; font-weight: 800; color: var(--sub); padding-bottom: 1.4vh; margin-bottom: 1.6vh;
+  border-bottom: 0.2vh solid var(--line);
+}
+.s2d-note { font-size: 2.4vh; color: var(--sub); padding: 2vh 0; }
+
+.s2d-option {
+  position: relative; display: flex; align-items: center; gap: 2.4vh; min-height: 8.2vh;
+  padding: 1.2vh 2vh; margin-bottom: 1.4vh; border-radius: 1.2vh; background: var(--panel);
+}
+.s2d-option-art { flex: none; width: 8.4vh; height: 8.4vh; border-radius: 1vh; overflow: hidden; background: var(--circle); }
+.s2d-option-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
+.s2d-option-text { min-width: 0; }
+.s2d-option-title { font-size: 2.6vh; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s2d-option-sub { margin-top: 0.6vh; font-size: 2.1vh; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s2d-chevron { margin-left: auto; font-size: 3.4vh; color: var(--glyph); flex: none; }
+
+.s2d-friends { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4vh 2vh; padding-top: 1vh; }
+.s2d-friend { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; }
+.s2d-friend-avatar {
+  position: relative; width: 13vh; height: 13vh; border-radius: 50%;
+  background: var(--circle); color: var(--sub); display: flex; align-items: center; justify-content: center; font-size: 8vh;
+}
+.s2d-friend-avatar img { border-radius: 50%; }
+.s2d-friend-avatar::before {
+  content: ""; position: absolute; right: 0.6vh; bottom: 0.6vh; width: 2.6vh; height: 2.6vh; border-radius: 50%;
+  border: 0.5vh solid var(--bg); background: #8a8a8a; display: none;
+}
+.s2d-friend.s2d-online .s2d-friend-avatar::before { display: block; background: #3ccf4e; }
+.s2d-friend.s2d-playing .s2d-friend-avatar::before { display: block; background: var(--accent); }
+.s2d-friend-avatar::after {
+  content: ""; position: absolute; inset: -1vh; border-radius: 50%;
+  border: 0.55vh solid var(--accent); opacity: 0; pointer-events: none;
+}
+.s2d-friend.s2d-focused .s2d-friend-avatar::after { opacity: 1; animation: s2d-pulse 1.1s ease-in-out infinite, s2d-pop 160ms ease-out; }
+.s2d-friend-name { margin-top: 1.6vh; font-size: 2.3vh; font-weight: 700; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s2d-friend-status { margin-top: 0.4vh; font-size: 1.9vh; color: var(--sub); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s2d-friend.s2d-playing .s2d-friend-status { color: var(--accent); }
+.s2d-friend.s2d-online .s2d-friend-status { color: #3ccf4e; }
+
+.s2d-code-box { padding: 3vh 3vh; margin-bottom: 3vh; border-radius: 1.6vh; background: var(--panel); text-align: center; }
+.s2d-code-label { font-size: 2.3vh; font-weight: 700; color: var(--sub); }
+.s2d-code { margin-top: 1vh; font-size: 5.6vh; font-weight: 800; letter-spacing: 0.12em; }
 
 /* ---------- round icons ---------- */
 .s2d-icons {

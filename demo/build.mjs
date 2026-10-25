@@ -45,6 +45,11 @@ const icons = {
   person: svg(md.MdPerson),
   wifi: svg(md.MdWifi),
   cloud: svg(md.MdCloudDownload),
+  people: svg(md.MdPeople),
+  personAdd: svg(md.MdPersonAdd),
+  gear: svg(md.MdSettings),
+  chevron: svg(md.MdChevronRight),
+  coffee: svg(fa.FaCoffee),
 };
 
 const html = readFileSync(join(here, "stage.template.html"), "utf8")

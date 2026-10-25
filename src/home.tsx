@@ -22,6 +22,7 @@ import { Settings } from "./settings";
 import {
   ALL_SOFTWARE_ROUTE,
   App,
+  MY_PAGE_ROUTE,
   Battery,
   ROUTES,
   isOnline,
@@ -31,7 +32,6 @@ import {
   openCommunity,
   openGameMenu,
   openNews,
-  openProfile,
   openStore,
   persona,
   recentApps,
@@ -256,7 +256,13 @@ function StatusBar({ h24 }: { h24: boolean }) {
   return (
     <div className="s2d-status">
       <Focusable className="s2d-users" flow-children="row">
-        <Focusable className="s2d-user" focusClassName={FOCUSED} noFocusRing onActivate={openProfile} onOKActionDescription={t.myPage}>
+        <Focusable
+          className="s2d-user"
+          focusClassName={FOCUSED}
+          noFocusRing
+          onActivate={() => Navigation.Navigate(MY_PAGE_ROUTE)}
+          onOKActionDescription={t.myPage}
+        >
           <Label>{me.name || t.myPage}</Label>
           {me.avatar ? <img src={me.avatar} draggable={false} /> : <MdPerson />}
         </Focusable>

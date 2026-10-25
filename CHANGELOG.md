@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0 — 2026-10-25
+
+- **My Page.** Press **A** on your avatar for the console's user page, with a menu on the left that fills the right
+  side as you move through it:
+  - **Profile:** avatar, name, status, Steam friend code and **Play Activity** (hours played and when you last played).
+  - **Friend List:** your friends as round icons, the ones playing first, with what they're playing or when they were
+    last online.
+  - **Add Friend:** your friend code, search by code, received and sent friend requests.
+  - **User Settings:** edit profile, change icon, privacy settings, Steam account.
+- White-theme rows and menus use white cards, like the console.
+
 ## 1.1.0 — 2026-10-25
 
 - **All Software screen.** The All Software tile now opens a Switch-style grid of your whole library: square tiles,

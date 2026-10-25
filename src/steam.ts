@@ -23,8 +23,9 @@ const CDN = "https://shared.steamstatic.com/store_item_assets/steam/apps";
 /** Steam's ELaunchSource for a launch started from the library. */
 const LAUNCH_SOURCE = 100;
 
-/** The plugin's own All Software screen. */
+/** The plugin's own screens: All Software and My Page. */
 export const ALL_SOFTWARE_ROUTE = "/switch2-dashboard/all-software";
+export const MY_PAGE_ROUTE = "/switch2-dashboard/my-page";
 
 export const ROUTES = {
   library: "/library",
@@ -211,7 +212,66 @@ export function sleep() {
   }
 }
 
+export interface Player {
+  id: string;
+  name: string;
+  avatar?: string;
+  /** Steam's own status line, in Steam's language ("Online", "Playing Hades", "Last online 2 hours ago"). */
+  status: string;
+  online: boolean;
+  playing: boolean;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function player(f: any): Player {
+  const p = f.persona ?? f.m_persona ?? {};
+  return {
+    id: String(f.steamid64 ?? f.accountid ?? p.m_steamid ?? f.display_name),
+    name: f.display_name ?? p.m_strPlayerName ?? "",
+    avatar: p.avatar_url_full ?? p.avatar_url_medium,
+    status: f.localized_online_status ?? "",
+    online: (p.m_ePersonaState ?? 0) !== 0,
+    playing: Boolean(p.is_ingame ?? f.current_game_name),
+  };
+}
+
+/** You, for My Page. The friend code is your Steam account ID, the number Steam's "Add a friend" asks for. */
+export function me(): Player & { friendCode: string } {
+  try {
+    const self = w.friendStore.m_FriendsUIFriendStore.self;
+    return { ...player(self), friendCode: String(self.accountid ?? self.m_unAccountID ?? "") };
+  } catch {
+    return { ...persona(), id: "", status: "", online: true, playing: false, friendCode: "" };
+  }
+}
+
+/** Friends, the ones playing first, then online, then the rest, by name. */
+export function friends(): Player[] {
+  try {
+    const list: Player[] = [...(w.friendStore.m_FriendsUIFriendStore.all_friends ?? [])].map(player);
+    const rank = (f: Player) => (f.playing ? 0 : f.online ? 1 : 2);
+    return list.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+  } catch {
+    return [];
+  }
+}
+
+export function incomingInvites(): number {
+  try {
+    return w.friendStore.m_FriendsUIFriendStore.GetFriendInviteCount?.() ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+const community = (path: string) => () => Navigation.NavigateToSteamWeb(`https://steamcommunity.com/my/${path}`);
+export const openEditProfile = community("edit/info");
+export const openEditAvatar = community("edit/avatar");
+export const openPrivacy = community("edit/settings");
+export const openAddFriend = community("friends/add");
+export const openSentInvites = community("friends/pending");
+export const openAccount = () => Navigation.NavigateToSteamWeb("https://store.steampowered.com/account/");
+
 export const openStore = () => Navigation.NavigateToSteamWeb("https://store.steampowered.com/");
 export const openNews = () => Navigation.NavigateToSteamWeb("https://store.steampowered.com/news/");
 export const openCommunity = () => Navigation.NavigateToSteamWeb("https://steamcommunity.com/");
-export const openProfile = () => Navigation.NavigateToSteamWeb("https://steamcommunity.com/my/");
