@@ -4,19 +4,19 @@
  */
 export const HOME_CSS = `
 .s2d-root {
-  --bg: #2d2d2d;
+  --bg: #242424;
   --text: #ffffff;
-  --sub: rgba(255,255,255,0.62);
-  --line: rgba(255,255,255,0.32);
-  --circle: #3c3c3c;
+  --sub: rgba(255,255,255,0.68);
+  --line: rgba(255,255,255,0.28);
+  --circle: #383838;
   --glyph: #b4b4b4;
-  --card: #3a3a3a;
-  --panel: #383838;
-  --gap: #2d2d2d;
+  --card: #343434;
+  --panel: #323232;
+  --gap: #242424;
   --accent: #00c3e3;
   --accent-hi: #63f2ff;
   --tile: 34vh;
-  --radius: 1.6vh;
+  --radius: 1.8vh;
   position: absolute; top: 0; left: 0; width: 100%; height: 100vh;
   overflow: hidden; z-index: 1;
   background: var(--bg); color: var(--text);
@@ -25,16 +25,17 @@ export const HOME_CSS = `
 }
 .s2d-root.s2d-white {
   --bg: #ebebeb;
-  --text: #2d2d2d;
-  --sub: rgba(45,45,45,0.6);
-  --line: rgba(45,45,45,0.25);
+  --text: #181818;
+  --sub: #484848;
+  --line: rgba(0, 0, 0, 0.16);
   --circle: #ffffff;
-  --glyph: #6e6e6e;
-  --card: #dcdcdc;
+  --glyph: #4e4e4e;
+  --card: #dedede;
   --panel: #ffffff;
   --gap: #ebebeb;
-  --accent: #0ab9e6;
-  --accent-hi: #45dcff;
+  --accent: #0066b2;
+  --accent-hi: #0088eb;
+  --accent-text: #00508e;
 }
 .s2d-root * { box-sizing: border-box; }
 .s2d-root svg { display: block; }
@@ -50,13 +51,15 @@ export const HOME_CSS = `
 .s2d-user {
   position: relative; width: 7.4vh; height: 7.4vh; border-radius: 50%;
   background: var(--circle); display: flex; align-items: center; justify-content: center;
-  font-size: 4vh; color: var(--sub);
+  font-size: 4vh; color: var(--sub); cursor: pointer;
+  transition: transform 0.16s ease-out;
 }
 .s2d-user img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .s2d-user::after {
   content: ""; position: absolute; inset: -0.9vh; border-radius: 50%;
-  border: 0.55vh solid var(--accent); opacity: 0;
+  border: 0.55vh solid var(--accent); opacity: 0; pointer-events: none;
 }
+.s2d-user.s2d-focused { transform: scale(1.08); }
 .s2d-user.s2d-focused::after { opacity: 1; animation: s2d-pulse 1.1s ease-in-out infinite, s2d-pop 160ms ease-out; }
 .s2d-user .s2d-label { top: calc(100% + 1.4vh); left: 0; }
 
@@ -80,7 +83,7 @@ export const HOME_CSS = `
 .s2d-row {
   position: absolute; left: 0; right: 0; top: 13.5vh;
   padding: 7vh 5vw 2.4vh 5vw;
-  display: flex; gap: 1.8vh;
+  display: flex; gap: 2vh;
   overflow: hidden; scroll-behavior: smooth;
 }
 .s2d-bars .s2d-row { top: calc(var(--s2d-header, 40px) + 9vh); }
@@ -88,11 +91,12 @@ export const HOME_CSS = `
 .s2d-tile {
   position: relative; flex: 0 0 var(--tile); width: var(--tile); height: var(--tile);
   border-radius: var(--radius);
+  transition: transform 0.16s ease-out;
 }
 .s2d-tile-art {
   position: absolute; inset: 0; border-radius: var(--radius); overflow: hidden;
   background: var(--card);
-  box-shadow: 0 0.4vh 1.2vh rgba(0,0,0,0.25);
+  box-shadow: 0 0.6vh 1.6vh rgba(0,0,0,0.35);
 }
 .s2d-tile-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
 .s2d-tile-text {
@@ -103,15 +107,22 @@ export const HOME_CSS = `
   content: ""; position: absolute; inset: -1.25vh; border-radius: calc(var(--radius) + 1.25vh);
   border: 0.62vh solid var(--accent); opacity: 0; pointer-events: none;
 }
-.s2d-tile.s2d-focused::after { opacity: 1; animation: s2d-pulse 1.1s ease-in-out infinite, s2d-pop 160ms ease-out; }
+.s2d-tile.s2d-focused { transform: scale(1.02); }
+.s2d-tile.s2d-focused::after {
+  opacity: 1;
+  animation: s2d-pulse 1.1s ease-in-out infinite, s2d-pop 160ms ease-out;
+  box-shadow: 0 0 2vh rgba(0, 195, 227, 0.45);
+}
 .s2d-tile .s2d-label {
-  bottom: calc(100% + 2vh); left: -0.2vh; font-size: 3vh; font-weight: 700;
+  bottom: calc(100% + 2vh); left: -0.2vh; font-size: 3.2vh; font-weight: 800;
+  color: var(--accent);
   max-width: 80vw; overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 0.2vh 0.8vh rgba(0,0,0,0.5);
 }
 .s2d-badge {
   position: absolute; left: 1.2vh; bottom: 1.2vh; width: 4.4vh; height: 4.4vh; border-radius: 50%;
-  background: rgba(0,0,0,0.65); color: #fff; display: flex; align-items: center; justify-content: center;
-  font-size: 2.4vh;
+  background: rgba(0,0,0,0.7); color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 2.4vh; box-shadow: 0 0.2vh 0.6vh rgba(0,0,0,0.4);
 }
 .s2d-all .s2d-tile-art { display: flex; align-items: center; justify-content: center; box-shadow: none; }
 .s2d-grid { display: grid; grid-template-columns: repeat(3, 4.2vh); gap: 1.1vh; }
@@ -152,6 +163,7 @@ export const HOME_CSS = `
 .s2d-menu-item {
   position: relative; height: 8.2vh; padding: 0 2.4vh; border-radius: 1.2vh;
   display: flex; align-items: center; gap: 2.2vh; font-size: 2.7vh; font-weight: 700; color: var(--text);
+  cursor: pointer;
 }
 .s2d-menu-item svg { font-size: 3.6vh; color: var(--glyph); flex: none; }
 .s2d-menu-item.s2d-active { background: var(--panel); }
@@ -172,7 +184,7 @@ export const HOME_CSS = `
 .s2d-profile-avatar {
   flex: none; width: 17vh; height: 17vh; border-radius: 50%; overflow: hidden;
   background: var(--circle); color: var(--sub); display: flex; align-items: center; justify-content: center; font-size: 10vh;
-  box-shadow: 0 0 0 0.6vh var(--panel);
+  box-shadow: 0 0 0 0.6vh var(--panel), 0 0.8vh 2vh rgba(0,0,0,0.35);
 }
 .s2d-profile-name { font-size: 4.6vh; font-weight: 800; line-height: 1.1; }
 .s2d-presence { margin-top: 1vh; font-size: 2.3vh; font-weight: 700; color: var(--sub); display: flex; align-items: center; gap: 1vh; }
@@ -189,6 +201,7 @@ export const HOME_CSS = `
 .s2d-option {
   position: relative; display: flex; align-items: center; gap: 2.4vh; min-height: 8.2vh;
   padding: 1.2vh 2vh; margin-bottom: 1.4vh; border-radius: 1.2vh; background: var(--panel);
+  cursor: pointer;
 }
 .s2d-option-art { flex: none; width: 8.4vh; height: 8.4vh; border-radius: 1vh; overflow: hidden; background: var(--circle); }
 .s2d-option-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
@@ -224,34 +237,105 @@ export const HOME_CSS = `
 .s2d-code-label { font-size: 2.3vh; font-weight: 700; color: var(--sub); }
 .s2d-code { margin-top: 1vh; font-size: 5.6vh; font-weight: 800; letter-spacing: 0.12em; }
 
-/* ---------- round icons ---------- */
+/* ---------- round shortcut icons: Nintendo Switch 2 dock ---------- */
 .s2d-icons {
   position: absolute; left: 0; right: 0; top: 68vh;
-  display: flex; justify-content: center; gap: 2.5vh;
+  display: flex; justify-content: center; gap: 2.4vh;
 }
 .s2d-bars .s2d-icons { top: 64vh; }
 .s2d-icon {
   position: relative; width: 8.6vh; height: 8.6vh; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+.s2d-icon.s2d-focused { transform: scale(1.15); }
+.s2d-icon:active { transform: scale(0.96); }
+
 .s2d-icon::before {
   content: ""; position: absolute; inset: -0.95vh; border-radius: 50%; opacity: 0;
   background: conic-gradient(#ff3b3b, #ffb31f, #ffe93b, #3cdc5a, #1fd4ff, #3b6bff, #c23bff, #ff3b3b);
+  transition: opacity 0.2s ease, filter 0.2s ease;
 }
-.s2d-icon.s2d-focused::before { opacity: 1; animation: s2d-spin 2.4s linear infinite, s2d-pop 160ms ease-out; }
+.s2d-icon.s2d-focused::before {
+  opacity: 1;
+  animation: s2d-spin 2.2s linear infinite, s2d-pop 160ms ease-out;
+  filter: drop-shadow(0 0 1.2vh rgba(0, 195, 227, 0.7));
+}
+
 .s2d-icon-face {
   position: relative; width: 100%; height: 100%; border-radius: 50%;
   background: var(--circle); display: flex; align-items: center; justify-content: center;
   font-size: 4.4vh; color: var(--glyph); box-shadow: 0 0 0 0.45vh var(--bg);
+  overflow: hidden;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 .s2d-root.s2d-white .s2d-icon-face { box-shadow: 0 0 0 0.45vh var(--bg), 0 0.3vh 0.8vh rgba(0,0,0,0.12); }
-.s2d-icon .s2d-label { bottom: calc(100% + 1.8vh); left: 50%; transform: translateX(-50%); }
+.s2d-icon .s2d-label {
+  bottom: calc(100% + 1.8vh); left: 50%; transform: translateX(-50%);
+  font-size: 2.6vh; font-weight: 800; color: var(--accent);
+  text-shadow: 0 0.2vh 0.8vh rgba(0,0,0,0.6);
+}
+
+/* Authentic Nintendo Switch 2 colors for shortcuts */
+.s2d-icon-colors .s2d-icon-online .s2d-icon-face { background: #E60012; color: #FFFFFF; }
+.s2d-icon-colors .s2d-icon-chat .s2d-icon-face { background: #0072CE; color: #FFFFFF; }
+.s2d-icon-colors .s2d-icon-news .s2d-icon-face { background: #E63900; color: #FFFFFF; }
+.s2d-icon-colors .s2d-icon-store .s2d-icon-face { background: #F58426; color: #FFFFFF; }
+.s2d-icon-colors .s2d-icon-album .s2d-icon-face { background: #00A0E9; color: #FFFFFF; }
+.s2d-icon-colors .s2d-icon-share .s2d-icon-face { background: #8E24AA; color: #FFFFFF; }
+.s2d-icon-colors .s2d-icon-controllers .s2d-icon-face { background: #282C31; color: #FFFFFF; }
+.s2d-icon-colors .s2d-icon-cards .s2d-icon-face { background: #00897B; color: #FFFFFF; }
+.s2d-icon-colors .s2d-icon-settings .s2d-icon-face { background: #546E7A; color: #FFFFFF; }
+.s2d-icon-colors .s2d-icon-sleep .s2d-icon-face { background: #37474F; color: #FFFFFF; }
+
+.s2d-icon-colors .s2d-icon-face::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 60%);
+  pointer-events: none;
+}
+.s2d-icon-colors .s2d-icon {
+  box-shadow: 0 0.5vh 1.4vh rgba(0,0,0,0.3);
+}
 
 .s2d-label {
   position: absolute; white-space: nowrap; pointer-events: none;
   font-size: 2.4vh; font-weight: 700; color: var(--accent); opacity: 0;
 }
 .s2d-focused > .s2d-label { opacity: 1; }
+
+/* Enhanced readability for Basic White theme: high-contrast deep Nintendo blue */
+.s2d-root.s2d-white .s2d-label,
+.s2d-root.s2d-white .s2d-tile .s2d-label,
+.s2d-root.s2d-white .s2d-icon .s2d-label {
+  color: var(--accent-text, #00508e);
+  text-shadow: none;
+  font-weight: 800;
+}
+.s2d-root.s2d-white .s2d-tile.s2d-focused::after {
+  box-shadow: 0 0 1.8vh rgba(0, 102, 178, 0.4);
+}
+.s2d-root.s2d-white .s2d-icon.s2d-focused::before {
+  filter: drop-shadow(0 0 1.2vh rgba(0, 102, 178, 0.6));
+}
+.s2d-root.s2d-white .s2d-presence.s2d-playing,
+.s2d-root.s2d-white .s2d-friend.s2d-playing .s2d-friend-status {
+  color: #00508e;
+}
+.s2d-root.s2d-white .s2d-avatar-preview-badge {
+  color: #00508e;
+  background: rgba(0, 80, 142, 0.12);
+}
+.s2d-root.s2d-white .s2d-btn.s2d-primary {
+  background: #0066b2;
+  color: #ffffff;
+}
+.s2d-root.s2d-white .s2d-category-tab.s2d-active {
+  background: #0066b2;
+  color: #ffffff;
+}
+.s2d-root.s2d-white .s2d-character-tile.s2d-selected {
+  box-shadow: 0 0 0 0.45vh #0066b2;
+}
 
 /* ---------- footer: controller on the left, button hints on the right ---------- */
 .s2d-footer {
@@ -266,6 +350,170 @@ export const HOME_CSS = `
 .s2d-glyph {
   width: 3.4vh; height: 3.4vh; border-radius: 50%; background: var(--text); color: var(--bg);
   display: flex; align-items: center; justify-content: center; font-size: 2vh; font-weight: 800;
+}
+
+/* ---------- Switch 2 Quick Settings Menu ---------- */
+.s2d-quick-backdrop {
+  position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px); z-index: 50; opacity: 1;
+  transition: opacity 0.25s ease;
+}
+.s2d-quick-panel {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 44vw; min-width: 380px; max-width: 520px;
+  background: rgba(36, 36, 38, 0.95); backdrop-filter: blur(28px);
+  border-left: 0.2vh solid var(--line); box-shadow: -1.5vh 0 4vh rgba(0,0,0,0.6);
+  z-index: 51; display: flex; flex-direction: column; padding: 4vh 3vw;
+  transform: translateX(0); animation: s2d-slide-in 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.s2d-root.s2d-white .s2d-quick-panel {
+  background: rgba(245, 245, 247, 0.96);
+}
+@keyframes s2d-slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.s2d-quick-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 2.2vh; border-bottom: 0.2vh solid var(--line);
+}
+.s2d-quick-user { display: flex; align-items: center; gap: 1.6vh; }
+.s2d-quick-user-avatar { width: 7vh; height: 7vh; border-radius: 50%; overflow: hidden; }
+.s2d-quick-user-name { font-size: 2.8vh; font-weight: 800; }
+.s2d-quick-content { flex: 1; overflow-y: auto; padding: 2.5vh 0; display: flex; flex-direction: column; gap: 2.4vh; }
+.s2d-quick-section { display: flex; flex-direction: column; gap: 1.2vh; }
+.s2d-quick-section-title { font-size: 2vh; font-weight: 800; color: var(--sub); text-transform: uppercase; letter-spacing: 0.05em; }
+.s2d-quick-card {
+  position: relative; display: flex; align-items: center; justify-content: space-between;
+  background: var(--panel); border-radius: 1.4vh; padding: 1.8vh 2.2vh;
+  font-size: 2.3vh; font-weight: 700; cursor: pointer;
+}
+.s2d-quick-card::after {
+  content: ""; position: absolute; inset: -0.6vh; border-radius: 2vh;
+  border: 0.5vh solid var(--accent); opacity: 0; pointer-events: none;
+}
+.s2d-quick-card.s2d-focused::after {
+  opacity: 1; animation: s2d-pulse 1.1s ease-in-out infinite, s2d-pop 160ms ease-out;
+}
+.s2d-quick-footer {
+  padding-top: 2vh; border-top: 0.2vh solid var(--line);
+  display: flex; align-items: center; justify-content: flex-end; gap: 3vh;
+}
+
+/* ---------- Switch 2 Avatar Customizer ---------- */
+.s2d-avatar-editor {
+  position: absolute; inset: 0; z-index: 40; background: var(--bg);
+  display: flex; flex-direction: column; padding: 3vh 4vw; overflow: hidden;
+}
+.s2d-avatar-editor-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 2vh; border-bottom: 0.2vh solid var(--line);
+}
+.s2d-avatar-editor-title { font-size: 3.6vh; font-weight: 800; display: flex; align-items: center; gap: 2vh; }
+.s2d-avatar-editor-body {
+  flex: 1; display: flex; gap: 4vw; padding-top: 2.5vh; overflow: hidden; min-height: 0;
+}
+.s2d-avatar-preview-col {
+  flex: 0 0 25vw; display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 3vh 2vw; background: var(--panel); border-radius: 2vh;
+}
+.s2d-avatar-preview-frame {
+  position: relative; width: 20vh; height: 20vh; border-radius: 50%;
+  box-shadow: 0 0 0 0.8vh var(--circle), 0 0 2.5vh rgba(0, 195, 227, 0.45);
+  margin-bottom: 2.2vh; display: flex; align-items: center; justify-content: center;
+}
+.s2d-avatar-preview-name { font-size: 3vh; font-weight: 800; margin-bottom: 0.6vh; }
+.s2d-avatar-preview-badge {
+  font-size: 1.8vh; font-weight: 700; color: var(--accent); padding: 0.4vh 1.4vh;
+  border-radius: 999px; background: rgba(0, 195, 227, 0.15); margin-bottom: 2.5vh;
+}
+.s2d-avatar-btn-row { display: flex; flex-direction: column; gap: 1.4vh; width: 100%; margin-top: auto; }
+.s2d-btn {
+  position: relative; height: 6.6vh; border-radius: 1.2vh; font-size: 2.3vh; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 1.5vh;
+  background: var(--circle); color: var(--text); border: none; cursor: pointer;
+  transition: transform 0.14s ease;
+}
+.s2d-btn:active { transform: scale(0.96); }
+.s2d-btn.s2d-primary { background: var(--accent); color: #000; }
+.s2d-btn::after {
+  content: ""; position: absolute; inset: -0.6vh; border-radius: 1.8vh;
+  border: 0.45vh solid var(--accent); opacity: 0; pointer-events: none;
+}
+.s2d-btn.s2d-focused::after {
+  opacity: 1; animation: s2d-pulse 1.1s ease-in-out infinite, s2d-pop 160ms ease-out;
+}
+.s2d-btn.s2d-primary.s2d-focused::after { border-color: #FFFFFF; }
+
+.s2d-avatar-selector-col {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0;
+}
+.s2d-avatar-section-title { font-size: 2.3vh; font-weight: 800; color: var(--sub); margin-bottom: 1vh; }
+.s2d-color-palette {
+  display: flex; gap: 1.4vh; padding: 1.2vh 0.6vh; overflow-x: auto; flex-shrink: 0;
+  margin-bottom: 2vh;
+}
+.s2d-color-swatch {
+  position: relative; flex: 0 0 6.2vh; width: 6.2vh; height: 6.2vh; border-radius: 50%;
+  box-shadow: 0 0.3vh 0.8vh rgba(0,0,0,0.3); cursor: pointer;
+  transition: transform 0.16s ease;
+}
+.s2d-color-swatch.s2d-focused { transform: scale(1.15); }
+.s2d-color-swatch.s2d-selected::after {
+  content: ""; position: absolute; inset: -0.6vh; border-radius: 50%;
+  border: 0.45vh solid #FFFFFF; box-shadow: 0 0 1vh rgba(0,0,0,0.5);
+}
+.s2d-color-swatch.s2d-focused::before {
+  content: ""; position: absolute; inset: -0.9vh; border-radius: 50%;
+  border: 0.4vh solid var(--accent); animation: s2d-pulse 1s infinite;
+}
+
+.s2d-category-tabs {
+  display: flex; gap: 1.2vh; margin-bottom: 1.6vh; flex-shrink: 0;
+}
+.s2d-category-tab {
+  position: relative; padding: 1vh 2vh; border-radius: 1vh; font-size: 2.1vh; font-weight: 700;
+  background: var(--panel); color: var(--sub); cursor: pointer;
+}
+.s2d-category-tab.s2d-active {
+  background: var(--accent); color: #000;
+}
+.s2d-category-tab::after {
+  content: ""; position: absolute; inset: -0.5vh; border-radius: 1.4vh;
+  border: 0.4vh solid var(--accent); opacity: 0; pointer-events: none;
+}
+.s2d-category-tab.s2d-focused::after {
+  opacity: 1; animation: s2d-pulse 1.1s ease-in-out infinite, s2d-pop 160ms ease-out;
+}
+
+.s2d-character-grid {
+  flex: 1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1.8vh; overflow-y: auto; padding: 1vh 0.6vh;
+}
+.s2d-character-tile {
+  position: relative; aspect-ratio: 1; border-radius: 1.6vh;
+  background: var(--panel); display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 1.2vh; cursor: pointer; transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.s2d-character-tile.s2d-focused {
+  transform: scale(1.1); z-index: 2;
+}
+.s2d-character-tile::after {
+  content: ""; position: absolute; inset: -0.6vh; border-radius: 2.2vh;
+  border: 0.5vh solid var(--accent); opacity: 0; pointer-events: none;
+}
+.s2d-character-tile.s2d-focused::after {
+  opacity: 1; animation: s2d-pulse 1.1s ease-in-out infinite, s2d-pop 160ms ease-out;
+}
+.s2d-character-tile.s2d-selected {
+  box-shadow: 0 0 0 0.45vh var(--accent);
+}
+.s2d-character-icon-wrapper {
+  width: 8.5vh; height: 8.5vh; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  overflow: hidden; box-shadow: 0 0.4vh 1vh rgba(0,0,0,0.3);
+}
+.s2d-character-name {
+  margin-top: 0.9vh; font-size: 1.8vh; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
 }
 
 @keyframes s2d-pulse {

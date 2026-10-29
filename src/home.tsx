@@ -1,29 +1,14 @@
 import { Focusable, GamepadEvent, NavEntryPositionPreferences, Navigation, classMap } from "@decky/ui";
 import { Component, ReactNode, RefObject, useEffect, useMemo, useRef, useState } from "react";
-import { FaSteam } from "react-icons/fa";
-import {
-  MdCast,
-  MdChatBubble,
-  MdCloudDownload,
-  MdNewspaper,
-  MdPerson,
-  MdPhotoLibrary,
-  MdPlayArrow,
-  MdPowerSettingsNew,
-  MdSdCard,
-  MdSettings,
-  MdShoppingBag,
-  MdSportsEsports,
-  MdWifi,
-  MdWifiOff,
-} from "react-icons/md";
+import { MdBrightnessMedium, MdCloudDownload, MdColorLens, MdGridOn, MdPlayArrow, MdPowerSettingsNew, MdVolumeUp, MdWifi, MdWifiOff } from "react-icons/md";
+import { SWITCH2_SHORTCUTS, ShortcutDefinition, SwitchAvatar } from "./icons";
 import { t } from "./i18n";
-import { Settings } from "./settings";
+import { CustomAvatar, Settings } from "./settings";
 import {
   ALL_SOFTWARE_ROUTE,
   App,
-  MY_PAGE_ROUTE,
   Battery,
+  MY_PAGE_ROUTE,
   ROUTES,
   isOnline,
   isPlayable,
@@ -177,32 +162,33 @@ function AllSoftwareTile({ first }: { first: boolean }) {
   );
 }
 
-interface Shortcut {
-  id: string;
-  label: string;
-  icon: ReactNode;
-  go: () => void;
-}
+const SHORTCUT_ACTIONS: Record<string, () => void> = {
+  online: openCommunity,
+  chat: () => Navigation.NavigateToChat(),
+  news: openNews,
+  store: openStore,
+  album: () => Navigation.Navigate(ROUTES.media),
+  share: () => Navigation.Navigate(ROUTES.remotePlay),
+  controllers: () => Navigation.Navigate(ROUTES.controllers),
+  cards: () => Navigation.Navigate(ROUTES.library),
+  settings: () => Navigation.Navigate(ROUTES.settings),
+  sleep: sleep,
+};
 
-/** The bottom row, in the console's order, each mapped to its closest Steam feature. */
-const SHORTCUTS: Shortcut[] = [
-  { id: "online", label: t.online, icon: <FaSteam />, go: openCommunity },
-  { id: "chat", label: t.chat, icon: <MdChatBubble />, go: () => Navigation.NavigateToChat() },
-  { id: "news", label: t.news, icon: <MdNewspaper />, go: openNews },
-  { id: "store", label: t.store, icon: <MdShoppingBag />, go: openStore },
-  { id: "album", label: t.album, icon: <MdPhotoLibrary />, go: () => Navigation.Navigate(ROUTES.media) },
-  { id: "share", label: t.remotePlay, icon: <MdCast />, go: () => Navigation.Navigate(ROUTES.remotePlay) },
-  { id: "controllers", label: t.controllers, icon: <MdSportsEsports />, go: () => Navigation.Navigate(ROUTES.controllers) },
-  { id: "cards", label: t.library, icon: <MdSdCard />, go: () => Navigation.Navigate(ROUTES.library) },
-  { id: "settings", label: t.settings, icon: <MdSettings />, go: () => Navigation.Navigate(ROUTES.settings) },
-  { id: "sleep", label: t.sleep, icon: <MdPowerSettingsNew />, go: sleep },
-];
-
-function RoundIcon({ s }: { s: Shortcut }) {
+function RoundIcon({ s }: { s: ShortcutDefinition }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const label = (t as any)[s.labelKey] ?? s.id;
+  const action = SHORTCUT_ACTIONS[s.id] ?? (() => {});
   return (
-    <Focusable className="s2d-icon" focusClassName={FOCUSED} noFocusRing onActivate={s.go} onOKActionDescription={t.open}>
-      <Label>{s.label}</Label>
-      <div className="s2d-icon-face">{s.icon}</div>
+    <Focusable
+      className={`s2d-icon s2d-icon-${s.id}`}
+      focusClassName={FOCUSED}
+      noFocusRing
+      onActivate={action}
+      onOKActionDescription={t.open}
+    >
+      <Label>{label}</Label>
+      <div className="s2d-icon-face">{s.renderIcon()}</div>
     </Focusable>
   );
 }
@@ -210,7 +196,6 @@ function RoundIcon({ s }: { s: Shortcut }) {
 function useClock(h24: boolean) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    // Tick on the minute so the clock flips exactly when the system's does.
     let timer = window.setTimeout(function tick() {
       setNow(new Date());
       timer = window.setTimeout(tick, 60000 - (Date.now() % 60000));
@@ -251,7 +236,7 @@ export function Tray({ h24 }: { h24: boolean }) {
   );
 }
 
-function StatusBar({ h24 }: { h24: boolean }) {
+function StatusBar({ h24, customAvatar }: { h24: boolean; customAvatar?: CustomAvatar }) {
   const me = useMemo(persona, []);
   return (
     <div className="s2d-status">
@@ -264,7 +249,7 @@ function StatusBar({ h24 }: { h24: boolean }) {
           onOKActionDescription={t.myPage}
         >
           <Label>{me.name || t.myPage}</Label>
-          {me.avatar ? <img src={me.avatar} draggable={false} /> : <MdPerson />}
+          <SwitchAvatar avatar={customAvatar} steamAvatar={me.avatar} size="100%" />
         </Focusable>
       </Focusable>
       <Tray h24={h24} />
@@ -351,15 +336,161 @@ export function Screen({ settings, className, hints, children }: { settings: Set
   );
 }
 
-export function SwitchHome({ settings }: { settings: Settings }) {
+/** Switch 2 Quick Settings Overlay */
+function QuickMenu({
+  settings,
+  onClose,
+  onToggleTheme,
+}: {
+  settings: Settings;
+  onClose: () => void;
+  onToggleTheme: () => void;
+}) {
+  const me = useMemo(persona, []);
+  const [brightness, setBrightness] = useState(80);
+  const [volume, setVolume] = useState(70);
+
+  return (
+    <div className="s2d-quick-backdrop" onClick={onClose}>
+      <Focusable
+        className="s2d-quick-panel"
+        flow-children="column"
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        onCancelButton={onClose}
+        onCancelActionDescription={t.close}
+      >
+        <div className="s2d-quick-header">
+          <div className="s2d-quick-user">
+            <SwitchAvatar avatar={settings.customAvatar} steamAvatar={me.avatar} className="s2d-quick-user-avatar" size="7vh" />
+            <div className="s2d-quick-user-name">{me.name || t.myPage}</div>
+          </div>
+          <Tray h24={settings.clock24} />
+        </div>
+
+        <div className="s2d-quick-content">
+          <div className="s2d-quick-section">
+            <div className="s2d-quick-section-title">{t.brightness}</div>
+            <Focusable
+              className="s2d-quick-card"
+              focusClassName={FOCUSED}
+              noFocusRing
+              onActivate={() => setBrightness((b) => (b >= 100 ? 25 : b + 25))}
+              onOKActionDescription={`${brightness}%`}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "1.5vh" }}>
+                <MdBrightnessMedium style={{ fontSize: "3.2vh", color: "var(--accent)" }} />
+                <span>{t.brightness}</span>
+              </div>
+              <span style={{ color: "var(--accent)", fontWeight: 800 }}>{brightness}%</span>
+            </Focusable>
+          </div>
+
+          <div className="s2d-quick-section">
+            <div className="s2d-quick-section-title">{t.volume}</div>
+            <Focusable
+              className="s2d-quick-card"
+              focusClassName={FOCUSED}
+              noFocusRing
+              onActivate={() => setVolume((v) => (v >= 100 ? 0 : v + 25))}
+              onOKActionDescription={`${volume}%`}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "1.5vh" }}>
+                <MdVolumeUp style={{ fontSize: "3.2vh", color: "var(--accent)" }} />
+                <span>{t.volume}</span>
+              </div>
+              <span style={{ color: "var(--accent)", fontWeight: 800 }}>{volume}%</span>
+            </Focusable>
+          </div>
+
+          <div className="s2d-quick-section">
+            <div className="s2d-quick-section-title">{t.options}</div>
+            <Focusable
+              className="s2d-quick-card"
+              focusClassName={FOCUSED}
+              noFocusRing
+              onActivate={onToggleTheme}
+              onOKActionDescription={t.themeLabel}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "1.5vh" }}>
+                <MdColorLens style={{ fontSize: "3.2vh" }} />
+                <span>{t.themeLabel}</span>
+              </div>
+              <span style={{ opacity: 0.75 }}>{settings.theme === "black" ? t.themeBlack : t.themeWhite}</span>
+            </Focusable>
+
+            <Focusable
+              className="s2d-quick-card"
+              focusClassName={FOCUSED}
+              noFocusRing
+              onActivate={() => {
+                onClose();
+                Navigation.Navigate(ALL_SOFTWARE_ROUTE);
+              }}
+              onOKActionDescription={t.open}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "1.5vh" }}>
+                <MdGridOn style={{ fontSize: "3.2vh" }} />
+                <span>{t.allSoftware}</span>
+              </div>
+            </Focusable>
+
+            <Focusable
+              className="s2d-quick-card"
+              focusClassName={FOCUSED}
+              noFocusRing
+              onActivate={() => {
+                onClose();
+                sleep();
+              }}
+              onOKActionDescription={t.sleepNow}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "1.5vh" }}>
+                <MdPowerSettingsNew style={{ fontSize: "3.2vh", color: "#FF4B4B" }} />
+                <span style={{ color: "#FF4B4B" }}>{t.sleepNow}</span>
+              </div>
+            </Focusable>
+          </div>
+        </div>
+
+        <div className="s2d-quick-footer">
+          <div className="s2d-hint">
+            <span className="s2d-glyph">B</span>
+            {t.close}
+          </div>
+          <div className="s2d-hint">
+            <span className="s2d-glyph">A</span>
+            {t.ok}
+          </div>
+        </div>
+      </Focusable>
+    </div>
+  );
+}
+
+export function SwitchHome({ settings, onUpdateSettings }: { settings: Settings; onUpdateSettings?: (p: Partial<Settings>) => void }) {
   const row = useRef<HTMLDivElement>(null);
+  const [quickMenuOpen, setQuickMenuOpen] = useState(false);
   const apps = useMemo(() => recentApps(settings.count), [settings.count]);
   useFollowFocus(row, "x");
 
+  const toggleQuickMenu = () => setQuickMenuOpen((v) => !v);
+
   return (
-    <Screen settings={settings} hints={[["☰", t.options], ["A", t.start]]}>
-      <Focusable className="s2d-main" flow-children="column">
-        <StatusBar h24={settings.clock24} />
+    <Screen
+      settings={settings}
+      hints={[
+        ["Y", t.quickMenu],
+        ["☰", t.options],
+        ["A", t.start],
+      ]}
+    >
+      <Focusable
+        className="s2d-main"
+        flow-children="column"
+        onOptionsButton={toggleQuickMenu}
+        onOptionsActionDescription={t.quickMenu}
+      >
+        <StatusBar h24={settings.clock24} customAvatar={settings.customAvatar} />
         <Focusable ref={row} className="s2d-row" flow-children="row">
           {apps.map((app, i) => (
             <GameTile key={app.appid} app={app} art={settings.tileArt} first={i === 0} />
@@ -367,12 +498,23 @@ export function SwitchHome({ settings }: { settings: Settings }) {
           <AllSoftwareTile first={apps.length === 0} />
           {apps.length === 0 && <div className="s2d-empty">{t.noSoftware}</div>}
         </Focusable>
-        <Focusable className="s2d-icons" flow-children="row" navEntryPreferPosition={NavEntryPositionPreferences.MAINTAIN_X}>
-          {SHORTCUTS.map((s) => (
+        <Focusable
+          className={`s2d-icons ${settings.iconColors ? "s2d-icon-colors" : ""}`}
+          flow-children="row"
+          navEntryPreferPosition={NavEntryPositionPreferences.MAINTAIN_X}
+        >
+          {SWITCH2_SHORTCUTS.map((s) => (
             <RoundIcon key={s.id} s={s} />
           ))}
         </Focusable>
       </Focusable>
+      {quickMenuOpen && (
+        <QuickMenu
+          settings={settings}
+          onClose={() => setQuickMenuOpen(false)}
+          onToggleTheme={() => onUpdateSettings?.({ theme: settings.theme === "black" ? "white" : "black" })}
+        />
+      )}
     </Screen>
   );
 }

@@ -2,8 +2,9 @@ import { Focusable, Navigation } from "@decky/ui";
 import { ReactNode, RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { MdChevronRight, MdPeople, MdPerson, MdPersonAdd, MdSettings } from "react-icons/md";
 import { FOCUSED, Screen, Tray, useFollowFocus } from "./home";
+import { SWITCH_AVATARS, SWITCH_BG_COLORS, SwitchAvatar } from "./icons";
 import { t } from "./i18n";
-import { Settings } from "./settings";
+import { CustomAvatar, Settings } from "./settings";
 import {
   App,
   Player,
@@ -14,7 +15,6 @@ import {
   openAccount,
   openAddFriend,
   openDetails,
-  openEditAvatar,
   openEditProfile,
   openPrivacy,
   openSentInvites,
@@ -59,10 +59,6 @@ function useFocusedTab(ref: RefObject<HTMLElement | null>, onFocus: (tab: Tab) =
   }, [ref]);
 }
 
-function Avatar({ src, className }: { src?: string; className: string }) {
-  return <div className={className}>{src ? <img src={src} draggable={false} /> : <MdPerson />}</div>;
-}
-
 /** A selectable row with the pulsing frame: play activity, Add Friend and User Settings options. */
 function Row({ children, onActivate, chevron }: { children: ReactNode; onActivate: () => void; chevron?: boolean }) {
   return (
@@ -79,7 +75,12 @@ function ProfilePane({ settings }: { settings: Settings }) {
   return (
     <>
       <div className="s2d-profile">
-        <Avatar src={self.avatar} className="s2d-profile-avatar" />
+        <SwitchAvatar
+          avatar={settings.customAvatar}
+          steamAvatar={self.avatar}
+          className="s2d-profile-avatar"
+          size="17vh"
+        />
         <div>
           <div className="s2d-profile-name">{self.name}</div>
           <div className="s2d-presence s2d-online">{self.status}</div>
@@ -118,7 +119,9 @@ function FriendCard({ friend }: { friend: Player }) {
       onActivate={() => Navigation.NavigateToChat()}
       onOKActionDescription={t.chat}
     >
-      <Avatar src={friend.avatar} className="s2d-friend-avatar" />
+      <div className="s2d-friend-avatar">
+        {friend.avatar ? <img src={friend.avatar} draggable={false} /> : <MdPerson />}
+      </div>
       <div className="s2d-friend-name">{friend.name}</div>
       <div className="s2d-friend-status">{friend.status}</div>
     </Focusable>
@@ -159,14 +162,14 @@ function AddFriendPane() {
   );
 }
 
-function SettingsPane() {
+function SettingsPane({ onOpenAvatarEditor }: { onOpenAvatarEditor: () => void }) {
   return (
     <>
+      <Row onActivate={onOpenAvatarEditor} chevron>
+        <div className="s2d-option-title">{t.changeIcon}</div>
+      </Row>
       <Row onActivate={openEditProfile} chevron>
         <div className="s2d-option-title">{t.editProfile}</div>
-      </Row>
-      <Row onActivate={openEditAvatar} chevron>
-        <div className="s2d-option-title">{t.changeIcon}</div>
       </Row>
       <Row onActivate={openPrivacy} chevron>
         <div className="s2d-option-title">{t.privacy}</div>
@@ -178,26 +181,207 @@ function SettingsPane() {
   );
 }
 
+/** Switch 2 Profile Avatar Selector / Customizer */
+export function AvatarEditor({
+  currentAvatar,
+  steamAvatar,
+  playerName,
+  onSave,
+  onClose,
+}: {
+  currentAvatar?: CustomAvatar;
+  steamAvatar?: string;
+  playerName: string;
+  onSave: (avatar: CustomAvatar) => void;
+  onClose: () => void;
+}) {
+  const [selectedIcon, setSelectedIcon] = useState(currentAvatar?.iconId || "mario");
+  const [selectedBg, setSelectedBg] = useState(currentAvatar?.bgColor || "#E60012");
+  const [category, setCategory] = useState<string>("all");
+
+  const categories = [
+    { id: "all", label: t.catAll },
+    { id: "mario", label: t.catMario },
+    { id: "zelda", label: t.catZelda },
+    { id: "pokemon", label: t.catPokemon },
+    { id: "nintendo", label: t.catNintendo },
+    { id: "special", label: t.catSpecial },
+  ];
+
+  const filteredAvatars = category === "all" ? SWITCH_AVATARS : SWITCH_AVATARS.filter((a) => a.category === category);
+
+  const handleSave = () => {
+    onSave({
+      enabled: selectedIcon !== "steam",
+      iconId: selectedIcon,
+      bgColor: selectedBg,
+    });
+    onClose();
+  };
+
+  const handleUseSteam = () => {
+    onSave({
+      enabled: false,
+      iconId: "steam",
+      bgColor: selectedBg,
+    });
+    onClose();
+  };
+
+  return (
+    <div className="s2d-avatar-editor">
+      <div className="s2d-avatar-editor-header">
+        <div className="s2d-avatar-editor-title">
+          <span>{t.iconSelector}</span>
+        </div>
+        <Focusable
+          className="s2d-btn"
+          focusClassName={FOCUSED}
+          noFocusRing
+          onActivate={onClose}
+          onOKActionDescription={t.back}
+          style={{ padding: "0 2.5vh" }}
+        >
+          {t.back}
+        </Focusable>
+      </div>
+
+      <div className="s2d-avatar-editor-body">
+        {/* Left Column: Live Preview & Action Buttons */}
+        <div className="s2d-avatar-preview-col">
+          <div className="s2d-avatar-preview-frame">
+            <SwitchAvatar
+              avatar={{ enabled: selectedIcon !== "steam", iconId: selectedIcon, bgColor: selectedBg }}
+              steamAvatar={steamAvatar}
+              size="100%"
+            />
+          </div>
+          <div className="s2d-avatar-preview-name">{playerName}</div>
+          <div className="s2d-avatar-preview-badge">Nintendo Switch 2</div>
+
+          <div className="s2d-avatar-btn-row">
+            <Focusable
+              className="s2d-btn s2d-primary"
+              focusClassName={FOCUSED}
+              noFocusRing
+              onActivate={handleSave}
+              onOKActionDescription={t.saveIcon}
+            >
+              {t.saveIcon}
+            </Focusable>
+
+            <Focusable
+              className="s2d-btn"
+              focusClassName={FOCUSED}
+              noFocusRing
+              onActivate={handleUseSteam}
+              onOKActionDescription={t.useSteamAvatar}
+            >
+              {t.useSteamAvatar}
+            </Focusable>
+          </div>
+        </div>
+
+        {/* Right Column: Palette & Character Grid */}
+        <div className="s2d-avatar-selector-col">
+          <div className="s2d-avatar-section-title">{t.colorTab}</div>
+          <div className="s2d-color-palette">
+            {SWITCH_BG_COLORS.map((c) => (
+              <Focusable
+                key={c.id}
+                className={`s2d-color-swatch ${c.hex === selectedBg ? "s2d-selected" : ""}`}
+                focusClassName={FOCUSED}
+                noFocusRing
+                style={{ backgroundColor: c.hex }}
+                onActivate={() => setSelectedBg(c.hex)}
+                onOKActionDescription={c.name}
+              >
+                <div style={{ width: "100%", height: "100%" }} />
+              </Focusable>
+            ))}
+          </div>
+
+          <div className="s2d-avatar-section-title">{t.characterTab}</div>
+          <div className="s2d-category-tabs">
+            {categories.map((cat) => (
+              <Focusable
+                key={cat.id}
+                className={`s2d-category-tab ${cat.id === category ? "s2d-active" : ""}`}
+                focusClassName={FOCUSED}
+                noFocusRing
+                onActivate={() => setCategory(cat.id)}
+                onOKActionDescription={cat.label}
+              >
+                {cat.label}
+              </Focusable>
+            ))}
+          </div>
+
+          <Focusable className="s2d-character-grid" flow-children="grid">
+            {filteredAvatars.map((a) => (
+              <Focusable
+                key={a.id}
+                className={`s2d-character-tile ${a.id === selectedIcon ? "s2d-selected" : ""}`}
+                focusClassName={FOCUSED}
+                noFocusRing
+                onActivate={() => setSelectedIcon(a.id)}
+                onOKActionDescription={a.name}
+              >
+                <div
+                  className="s2d-character-icon-wrapper"
+                  style={{ backgroundColor: a.id === "steam" ? "#1B2838" : selectedBg }}
+                >
+                  <div style={{ width: "70%", height: "70%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {a.render()}
+                  </div>
+                </div>
+                <div className="s2d-character-name">{a.name}</div>
+              </Focusable>
+            ))}
+          </Focusable>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * My Page, like the console's user page: a menu on the left (Profile, Friend List, Add Friend, User Settings) whose
  * selection fills the right side as you move through it.
  */
-export function MyPage({ settings }: { settings: Settings }) {
+export function MyPage({
+  settings,
+  onUpdateSettings,
+}: {
+  settings: Settings;
+  onUpdateSettings?: (patch: Partial<Settings>) => void;
+}) {
   const self = useMemo(me, []);
   const menu = useRef<HTMLDivElement>(null);
   const pane = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState<Tab>("profile");
+  const [editingAvatar, setEditingAvatar] = useState(false);
+
   useFocusedTab(menu, setTab);
   useFollowFocus(pane, "y");
   useEffect(() => {
     if (pane.current) pane.current.scrollTop = 0;
   }, [tab]);
 
+  const handleSaveAvatar = (customAvatar: CustomAvatar) => {
+    onUpdateSettings?.({ customAvatar });
+  };
+
   return (
     <Screen settings={settings} className="s2d-mypage" hints={[["B", t.back], ["A", t.ok]]}>
       <div className="s2d-status">
         <div className="s2d-title">
-          <Avatar src={self.avatar} className="s2d-title-avatar" />
+          <SwitchAvatar
+            avatar={settings.customAvatar}
+            steamAvatar={self.avatar}
+            className="s2d-title-avatar"
+            size="5.6vh"
+          />
           {t.pageOf(self.name || t.myPage)}
         </div>
         <Tray h24={settings.clock24} />
@@ -224,9 +408,19 @@ export function MyPage({ settings }: { settings: Settings }) {
           {tab === "profile" && <ProfilePane settings={settings} />}
           {tab === "friends" && <FriendsPane />}
           {tab === "add" && <AddFriendPane />}
-          {tab === "settings" && <SettingsPane />}
+          {tab === "settings" && <SettingsPane onOpenAvatarEditor={() => setEditingAvatar(true)} />}
         </Focusable>
       </Focusable>
+
+      {editingAvatar && (
+        <AvatarEditor
+          currentAvatar={settings.customAvatar}
+          steamAvatar={self.avatar}
+          playerName={self.name || "Player"}
+          onSave={handleSaveAvatar}
+          onClose={() => setEditingAvatar(false)}
+        />
+      )}
     </Screen>
   );
 }

@@ -11,8 +11,9 @@ import {
 } from "@decky/ui";
 import { useState } from "react";
 import { FaCoffee } from "react-icons/fa";
-import { MdHome } from "react-icons/md";
+import { MdHome, MdPerson } from "react-icons/md";
 import { Fallback, SwitchHome } from "./home";
+import { SwitchAvatar } from "./icons";
 import { AllSoftware } from "./library";
 import { MyPage } from "./mypage";
 import { t } from "./i18n";
@@ -23,7 +24,7 @@ const getSettings = callable<[], Partial<Settings>>("get_settings");
 const setSettings = callable<[Settings], boolean>("set_settings");
 
 /** Shown in the panel so you can tell which build Steam has loaded. Kept in sync with package.json by scripts/package.sh. */
-const VERSION = "1.2.0";
+const VERSION = "1.3.0";
 const DONATE_URL = "https://buymeacoffee.com/kromossomoc";
 const HOME_ROUTE = "/library/home";
 let settings: Settings = DEFAULT_SETTINGS;
@@ -33,7 +34,7 @@ let homePatch: any;
 
 /** The plugin's screens read the settings when it opens, so they always match the HOME Menu's theme. */
 const AllSoftwareRoute = () => <AllSoftware settings={settings} />;
-const MyPageRoute = () => <MyPage settings={settings} />;
+const MyPageRoute = () => <MyPage settings={settings} onUpdateSettings={update} />;
 
 /** Swaps Steam's home for the HOME Menu, or puts Steam's back, to match the settings. */
 function syncHomePatch() {
@@ -48,7 +49,7 @@ function syncHomePatch() {
     ...props,
     children: (
       <Fallback fallback={props.children}>
-        <SwitchHome settings={current} />
+        <SwitchHome settings={current} onUpdateSettings={update} />
       </Fallback>
     ),
     component: undefined,
@@ -92,6 +93,14 @@ function Content() {
           />
         </PanelSectionRow>
         <PanelSectionRow>
+          <ToggleField
+            label={t.iconColorsLabel}
+            description={t.iconColorsDesc}
+            checked={st.iconColors}
+            onChange={(iconColors) => change({ iconColors })}
+          />
+        </PanelSectionRow>
+        <PanelSectionRow>
           <DropdownItem
             label={t.artLabel}
             rgOptions={[
@@ -113,6 +122,29 @@ function Content() {
           <ToggleField label={t.clock24Label} checked={st.clock24} onChange={(clock24) => change({ clock24 })} />
         </PanelSectionRow>
       </PanelSection>
+
+      <PanelSection title={t.avatarSection}>
+        <PanelSectionRow>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px", margin: "4px 0 8px" }}>
+            <SwitchAvatar avatar={st.customAvatar} size="44px" />
+            <div style={{ fontSize: "12px", opacity: 0.85 }}>{t.avatarDesc}</div>
+          </div>
+        </PanelSectionRow>
+        <PanelSectionRow>
+          <ButtonItem
+            layout="below"
+            onClick={() => {
+              Navigation.CloseSideMenus();
+              Navigation.Navigate(MY_PAGE_ROUTE);
+            }}
+          >
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+              <MdPerson /> {t.openAvatarEditor}
+            </span>
+          </ButtonItem>
+        </PanelSectionRow>
+      </PanelSection>
+
       <PanelSection title={t.supportSection}>
         <PanelSectionRow>
           <div style={{ fontSize: "12px", opacity: 0.8, marginBottom: "6px" }}>{t.supportText}</div>
@@ -148,11 +180,5 @@ export default definePlugin(() => {
     titleView: <div className={staticClasses.Title}>Switch 2 Dashboard</div>,
     content: <Content />,
     icon: <MdHome />,
-    onDismount() {
-      unloaded = true;
-      syncHomePatch();
-      routerHook.removeRoute(ALL_SOFTWARE_ROUTE);
-      routerHook.removeRoute(MY_PAGE_ROUTE);
-    },
   };
 });
