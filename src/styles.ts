@@ -516,6 +516,38 @@ export const HOME_CSS = `
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
 }
 
+/* ---------- Nintendo Switch Online icon maker ---------- */
+.s2d-nso-preview { overflow: hidden; background: var(--circle); }
+.s2d-nso-preview img { width: 100%; height: 100%; border-radius: 50%; }
+.s2d-nso-spinner {
+  width: 5vh; height: 5vh; border-radius: 50%;
+  border: 0.6vh solid var(--line); border-top-color: var(--accent); animation: s2d-spin 0.9s linear infinite;
+}
+.s2d-nso-note { font-size: 2vh; color: var(--sub); padding: 1vh 0.6vh; text-align: center; }
+.s2d-nso-preview .s2d-nso-note { padding: 2vh; font-size: 1.7vh; }
+.s2d-nso-empty { display: flex; flex-direction: column; align-items: center; gap: 2vh; padding-top: 4vh; }
+.s2d-nso-collection { display: flex; align-items: center; gap: 2vh; margin-bottom: 1.2vh; flex-shrink: 0; }
+.s2d-nso-collection .s2d-avatar-section-title { margin-bottom: 0; }
+.s2d-nso-dropdown { flex: 1; min-width: 0; }
+.s2d-nso-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1.6vh; align-content: start; }
+.s2d-nso-tile { padding: 0; overflow: visible; background: var(--circle); }
+.s2d-nso-tile img { width: 100%; height: 100%; border-radius: 1.6vh; object-fit: cover; }
+.s2d-nso-none { font-size: 1.9vh; font-weight: 700; color: var(--sub); }
+.s2d-nso-credit {
+  display: flex; align-items: center; justify-content: space-between; gap: 2vh; flex-shrink: 0;
+  padding-top: 1.2vh; font-size: 1.5vh; color: var(--sub);
+}
+.s2d-nso-refresh {
+  position: relative; flex-shrink: 0; padding: 0.6vh 1.6vh; border-radius: 1vh;
+  background: var(--panel); color: var(--text); font-weight: 700;
+}
+.s2d-nso-refresh::after {
+  content: ""; position: absolute; inset: -0.5vh; border-radius: 1.4vh;
+  border: 0.4vh solid var(--accent); opacity: 0; pointer-events: none;
+}
+.s2d-nso-refresh.s2d-focused::after { opacity: 1; animation: s2d-pulse 1.1s ease-in-out infinite; }
+.s2d-btn.s2d-disabled { opacity: 0.45; }
+
 @keyframes s2d-pulse {
   0%, 100% { border-color: var(--accent); }
   50% { border-color: var(--accent-hi); }

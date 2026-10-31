@@ -1,9 +1,19 @@
 import type { TileArt } from "./steam";
 
+/** A Nintendo Switch Online icon: repository paths of its parts in henry-debruin/nso-icons ("" = none). */
+export interface NsoParts {
+  character: string;
+  frame: string;
+  background: string;
+}
+
 export interface CustomAvatar {
   enabled: boolean;
+  /** One of SWITCH_AVATARS, "steam", or "nso" for an icon built from Nintendo Switch Online parts. */
   iconId: string;
   bgColor: string;
+  /** The parts the "nso" icon was built from, so its editor reopens on them. */
+  nso?: NsoParts;
 }
 
 export interface Settings {

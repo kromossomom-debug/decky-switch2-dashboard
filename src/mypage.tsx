@@ -3,6 +3,7 @@ import { ReactNode, RefObject, useEffect, useMemo, useRef, useState } from "reac
 import { MdChevronRight, MdPeople, MdPerson, MdPersonAdd, MdSettings } from "react-icons/md";
 import { FOCUSED, Screen, Tray, useFollowFocus } from "./home";
 import { SWITCH_AVATARS, SWITCH_BG_COLORS, SwitchAvatar } from "./icons";
+import { NsoEditor } from "./nsoeditor";
 import { t } from "./i18n";
 import { CustomAvatar, Settings } from "./settings";
 import {
@@ -162,11 +163,14 @@ function AddFriendPane() {
   );
 }
 
-function SettingsPane({ onOpenAvatarEditor }: { onOpenAvatarEditor: () => void }) {
+function SettingsPane({ onOpenAvatarEditor, onOpenNsoEditor }: { onOpenAvatarEditor: () => void; onOpenNsoEditor: () => void }) {
   return (
     <>
       <Row onActivate={onOpenAvatarEditor} chevron>
         <div className="s2d-option-title">{t.changeIcon}</div>
+      </Row>
+      <Row onActivate={onOpenNsoEditor} chevron>
+        <div className="s2d-option-title">{t.nsoIcons}</div>
       </Row>
       <Row onActivate={openEditProfile} chevron>
         <div className="s2d-option-title">{t.editProfile}</div>
@@ -188,12 +192,14 @@ export function AvatarEditor({
   playerName,
   onSave,
   onClose,
+  onOpenNso,
 }: {
   currentAvatar?: CustomAvatar;
   steamAvatar?: string;
   playerName: string;
   onSave: (avatar: CustomAvatar) => void;
   onClose: () => void;
+  onOpenNso?: () => void;
 }) {
   const [selectedIcon, setSelectedIcon] = useState(currentAvatar?.iconId || "mario");
   const [selectedBg, setSelectedBg] = useState(currentAvatar?.bgColor || "#E60012");
@@ -215,6 +221,7 @@ export function AvatarEditor({
       enabled: selectedIcon !== "steam",
       iconId: selectedIcon,
       bgColor: selectedBg,
+      nso: currentAvatar?.nso,
     });
     onClose();
   };
@@ -224,6 +231,7 @@ export function AvatarEditor({
       enabled: false,
       iconId: "steam",
       bgColor: selectedBg,
+      nso: currentAvatar?.nso,
     });
     onClose();
   };
@@ -279,6 +287,18 @@ export function AvatarEditor({
             >
               {t.useSteamAvatar}
             </Focusable>
+
+            {onOpenNso && (
+              <Focusable
+                className="s2d-btn"
+                focusClassName={FOCUSED}
+                noFocusRing
+                onActivate={onOpenNso}
+                onOKActionDescription={t.nsoIcons}
+              >
+                {t.nsoIcons}
+              </Focusable>
+            )}
           </div>
         </div>
 
@@ -349,6 +369,58 @@ export function AvatarEditor({
  * My Page, like the console's user page: a menu on the left (Profile, Friend List, Add Friend, User Settings) whose
  * selection fills the right side as you move through it.
  */
+/** The menu and the pane it fills. Unmounted while an icon editor is open, so the controller's focus moves into it. */
+function MyPageBody({
+  settings,
+  tab,
+  setTab,
+  onOpenAvatarEditor,
+  onOpenNsoEditor,
+}: {
+  settings: Settings;
+  tab: Tab;
+  setTab: (tab: Tab) => void;
+  onOpenAvatarEditor: () => void;
+  onOpenNsoEditor: () => void;
+}) {
+  const menu = useRef<HTMLDivElement>(null);
+  const pane = useRef<HTMLDivElement>(null);
+
+  useFocusedTab(menu, setTab);
+  useFollowFocus(pane, "y");
+  useEffect(() => {
+    if (pane.current) pane.current.scrollTop = 0;
+  }, [tab]);
+
+  return (
+    <Focusable className="s2d-page" flow-children="row">
+      <Focusable ref={menu} className="s2d-menu" flow-children="column">
+        {TABS.map((x) => (
+          <Focusable
+            key={x.id}
+            data-tab={x.id}
+            className={`s2d-menu-item ${x.id === tab ? "s2d-active" : ""}`}
+            focusClassName={FOCUSED}
+            noFocusRing
+            preferredFocus={x.id === tab}
+            onActivate={() => setTab(x.id)}
+            onOKActionDescription={t.ok}
+          >
+            {x.icon}
+            {x.label}
+          </Focusable>
+        ))}
+      </Focusable>
+      <Focusable ref={pane} className="s2d-pane" flow-children="column">
+        {tab === "profile" && <ProfilePane settings={settings} />}
+        {tab === "friends" && <FriendsPane />}
+        {tab === "add" && <AddFriendPane />}
+        {tab === "settings" && <SettingsPane onOpenAvatarEditor={onOpenAvatarEditor} onOpenNsoEditor={onOpenNsoEditor} />}
+      </Focusable>
+    </Focusable>
+  );
+}
+
 export function MyPage({
   settings,
   onUpdateSettings,
@@ -357,27 +429,23 @@ export function MyPage({
   onUpdateSettings?: (patch: Partial<Settings>) => void;
 }) {
   const self = useMemo(me, []);
-  const menu = useRef<HTMLDivElement>(null);
-  const pane = useRef<HTMLDivElement>(null);
   const [tab, setTab] = useState<Tab>("profile");
-  const [editingAvatar, setEditingAvatar] = useState(false);
-
-  useFocusedTab(menu, setTab);
-  useFollowFocus(pane, "y");
-  useEffect(() => {
-    if (pane.current) pane.current.scrollTop = 0;
-  }, [tab]);
+  const [editor, setEditor] = useState<"icon" | "nso" | null>(null);
+  // The route hands in the settings it had when My Page opened; keep the icon here so a new one shows right away.
+  const [avatar, setAvatar] = useState(settings.customAvatar);
+  const view = useMemo(() => ({ ...settings, customAvatar: avatar }), [settings, avatar]);
 
   const handleSaveAvatar = (customAvatar: CustomAvatar) => {
+    setAvatar(customAvatar);
     onUpdateSettings?.({ customAvatar });
   };
 
   return (
-    <Screen settings={settings} className="s2d-mypage" hints={[["B", t.back], ["A", t.ok]]}>
+    <Screen settings={view} className="s2d-mypage" hints={[["B", t.back], ["A", t.ok]]}>
       <div className="s2d-status">
         <div className="s2d-title">
           <SwitchAvatar
-            avatar={settings.customAvatar}
+            avatar={avatar}
             steamAvatar={self.avatar}
             className="s2d-title-avatar"
             size="5.6vh"
@@ -386,39 +454,34 @@ export function MyPage({
         </div>
         <Tray h24={settings.clock24} />
       </div>
-      <Focusable className="s2d-page" flow-children="row">
-        <Focusable ref={menu} className="s2d-menu" flow-children="column">
-          {TABS.map((x, i) => (
-            <Focusable
-              key={x.id}
-              data-tab={x.id}
-              className={`s2d-menu-item ${x.id === tab ? "s2d-active" : ""}`}
-              focusClassName={FOCUSED}
-              noFocusRing
-              preferredFocus={i === 0}
-              onActivate={() => setTab(x.id)}
-              onOKActionDescription={t.ok}
-            >
-              {x.icon}
-              {x.label}
-            </Focusable>
-          ))}
-        </Focusable>
-        <Focusable ref={pane} className="s2d-pane" flow-children="column">
-          {tab === "profile" && <ProfilePane settings={settings} />}
-          {tab === "friends" && <FriendsPane />}
-          {tab === "add" && <AddFriendPane />}
-          {tab === "settings" && <SettingsPane onOpenAvatarEditor={() => setEditingAvatar(true)} />}
-        </Focusable>
-      </Focusable>
 
-      {editingAvatar && (
+      {editor === null && (
+        <MyPageBody
+          settings={view}
+          tab={tab}
+          setTab={setTab}
+          onOpenAvatarEditor={() => setEditor("icon")}
+          onOpenNsoEditor={() => setEditor("nso")}
+        />
+      )}
+
+      {editor === "icon" && (
         <AvatarEditor
-          currentAvatar={settings.customAvatar}
+          currentAvatar={avatar}
           steamAvatar={self.avatar}
           playerName={self.name || "Player"}
           onSave={handleSaveAvatar}
-          onClose={() => setEditingAvatar(false)}
+          onClose={() => setEditor(null)}
+          onOpenNso={() => setEditor("nso")}
+        />
+      )}
+
+      {editor === "nso" && (
+        <NsoEditor
+          currentAvatar={avatar}
+          playerName={self.name || "Player"}
+          onSave={handleSaveAvatar}
+          onClose={() => setEditor(null)}
         />
       )}
     </Screen>

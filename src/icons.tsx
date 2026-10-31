@@ -1,5 +1,7 @@
 import { ReactNode } from "react";
 import { FaSteam } from "react-icons/fa";
+import { useNsoAvatar } from "./nso";
+import type { CustomAvatar } from "./settings";
 
 /**
  * Authentic Nintendo Switch 2 Shortcuts and Profile Icons.
@@ -649,11 +651,23 @@ export function SwitchAvatar({
   className,
   size,
 }: {
-  avatar?: { enabled: boolean; iconId: string; bgColor: string };
+  avatar?: CustomAvatar;
   steamAvatar?: string;
   className?: string;
   size?: string;
 }) {
+  const nsoImage = useNsoAvatar();
+  if (avatar?.enabled && avatar.iconId === "nso" && nsoImage) {
+    return (
+      <div
+        className={className}
+        style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", boxShadow: "0 0.4vh 1.2vh rgba(0,0,0,0.35)" }}
+      >
+        <img src={nsoImage} draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </div>
+    );
+  }
+
   const isCustom = avatar?.enabled && avatar.iconId && avatar.iconId !== "steam";
   const selectedIcon = isCustom ? SWITCH_AVATARS.find((a) => a.id === avatar.iconId) : null;
 

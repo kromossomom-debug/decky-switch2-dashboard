@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.0 — 2026-10-31
+
+- **Nintendo Switch Online icons.** A new icon maker in **My Page → User Settings → Nintendo Switch Online Icons**
+  (also a button in **Change Icon**), like [nso-icon-tool](https://github.com/dslatt/nso-icon-tool) on the Switch:
+  - Pick a **character**, a **frame** and a **background** from 66 game collections and over 7,500 parts from
+    [henry-debruin/nso-icons](https://github.com/henry-debruin/nso-icons), with "None" for frames and backgrounds.
+  - Live preview of the stacked icon, **Surprise Me** (**X**) for a random one, and **Check for new icons** to refresh
+    the list when the collection grows.
+  - Nothing is bundled: the list is cached by the backend, the pictures load from GitHub as you browse, and the saved
+    icon is kept on the Deck as one PNG, so it shows offline in the status bar, My Page and Quick Settings.
+- My Page now shows a new icon as soon as you save it, and the icon editors take over the page so the controller's
+  focus goes straight into them.
+
 ## 1.3.0 — 2026-10-29
 
 - **Authentic Nintendo Switch 2 HOME Dock.** Round shortcut buttons now feature 1:1 vector SVG icons and Nintendo's vibrant signature colors:

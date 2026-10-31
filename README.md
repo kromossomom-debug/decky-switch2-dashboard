@@ -56,6 +56,12 @@ A [Decky Loader](https://decky.xyz) plugin for the Steam Deck and other handheld
     were last online. **A** opens Friends & Chat.
   - **Add Friend:** your friend code in big type, search by friend code and your received and sent friend requests.
   - **User Settings:** edit your profile, change your icon, privacy settings and your Steam account.
+- **Nintendo Switch Online icons.** **My Page → User Settings → Nintendo Switch Online Icons** builds your user icon
+  the way the console does: pick a **character**, a **frame** and a **background** from any of 66 game collections
+  (Mario Kart World, Zelda, Splatoon, Kirby, Pokémon, Animal Crossing, Miis…, over 7,500 parts) and watch them stack in
+  a live preview. **Surprise Me** (or **X**) rolls a random one. Your icon shows up in the status bar, on My Page and in
+  the Quick Settings menu. The parts are the community collection [henry-debruin/nso-icons](https://github.com/henry-debruin/nso-icons),
+  the same one [nso-icon-tool](https://github.com/dslatt/nso-icon-tool) uses on the Switch.
 - **Footer.** A handheld icon on the left and **☰ Options · A Start** on the right. Steam's own top and bottom bars
   are hidden on the HOME Menu only, and come back everywhere else.
 - **Basic Black and Basic White themes,** like the console's.
@@ -106,6 +112,8 @@ To update, install the new ZIP the same way. Your settings are kept.
 | **A** | Your icon | Open My Page |
 | **D-pad** | My Page menu | Switch between Profile, Friend List, Add Friend and User Settings |
 | **B** | My Page | Back to the HOME Menu |
+| **X** | Nintendo Switch Online icon maker | A random icon |
+| **B** | Icon makers | Back to My Page |
 | **☰** | Any game tile | Steam's game menu: Favorites, Manage, Properties, SteamGridDB's *Change artwork…* |
 | **D-pad / stick** | Anywhere | Move between the avatar, the game row and the shortcuts |
 
@@ -140,6 +148,13 @@ and hides them only while the HOME Menu is actually on screen.
 The clock, battery and Wi-Fi come from `SteamClient.System` and Steam's network store. Turning the plugin off or
 uninstalling it puts Steam's home back.
 
+The Nintendo Switch Online icon parts are about 470 MB, so none of them ship with the plugin. Like nso-icon-tool, it
+gets them from [henry-debruin/nso-icons](https://github.com/henry-debruin/nso-icons): the backend downloads the file
+list once (from GitHub's API) and caches it, the pictures load from GitHub as you browse, and the icon you save is
+stacked on a canvas (background, character, then the frame on top) and kept on the Deck as
+`~/homebrew/settings/switch2-dashboard/avatar.png`, so it shows even offline. The console's default frames have no
+transparency, so the plugin cuts their flat center circle out before stacking them.
+
 ## Building from source
 
 Requirements: Node.js 18+ and npm.
@@ -158,11 +173,13 @@ src/
   home.tsx     the HOME Menu: status bar, game row, round shortcuts, footer
   library.tsx  All Software: the library grid and its sort orders
   mypage.tsx   My Page: profile, play activity, friends, add friend, user settings
+  nso.ts       Nintendo Switch Online icons: part list, stacking the layers, the saved icon
+  nsoeditor.tsx  the Nintendo Switch Online icon maker
   steam.ts     Steam data: recent games, artwork, launching, battery, network
   styles.ts    stylesheet for the HOME Menu
   i18n.ts      English and Portuguese text
   settings.ts  settings and defaults
-main.py        Decky backend: settings
+main.py        Decky backend: settings, the icon part list and the saved icon
 demo/          scene and renderer for the screenshots and the demo video
 ```
 
@@ -175,6 +192,7 @@ To re-render the screenshots: `node demo/build.mjs && node demo/record.mjs shots
 - Steam has no square game art, so tiles crop the cover (or the banner or hero art, if you pick those).
 - The console's sounds, font and logos are Nintendo's, so the plugin uses Steam's navigation sounds, Steam's font and
   generic icons.
+- Building a Nintendo Switch Online icon needs an internet connection. Once saved, the icon works offline.
 
 ## Support
 
@@ -185,11 +203,18 @@ has a **Buy Me a Coffee** button too.
 
 Bug reports and ideas are welcome in [Issues](https://github.com/kromossomom-debug/decky-switch2-dashboard/issues).
 
+## Credits
+
+- Nintendo Switch Online icon parts collected by [henry-debruin](https://github.com/henry-debruin) and
+  [simon-debruin](https://github.com/simon-debruin) in [nso-icons](https://github.com/henry-debruin/nso-icons).
+- The layered icon maker is inspired by [nso-icon-tool](https://github.com/dslatt/nso-icon-tool) by dslatt.
+
 ## Disclaimer
 
 This is an unofficial fan project. It is not affiliated with, endorsed by or sponsored by Nintendo or Valve. Nintendo
 Switch is a trademark of Nintendo. Steam and Steam Deck are trademarks of Valve Corporation. The plugin contains no
-Nintendo assets. Game artwork shown in the screenshots belongs to its respective owners.
+Nintendo assets: the Nintendo Switch Online icon parts are downloaded from a third-party collection only when you open
+the icon maker, and belong to Nintendo. Game artwork shown in the screenshots belongs to its respective owners.
 
 ## License
 

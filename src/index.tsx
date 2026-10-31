@@ -16,6 +16,7 @@ import { Fallback, SwitchHome } from "./home";
 import { SwitchAvatar } from "./icons";
 import { AllSoftware } from "./library";
 import { MyPage } from "./mypage";
+import { loadNsoAvatar } from "./nso";
 import { t } from "./i18n";
 import { DEFAULT_SETTINGS, Settings, withDefaults } from "./settings";
 import { ALL_SOFTWARE_ROUTE, MY_PAGE_ROUTE } from "./steam";
@@ -24,7 +25,7 @@ const getSettings = callable<[], Partial<Settings>>("get_settings");
 const setSettings = callable<[Settings], boolean>("set_settings");
 
 /** Shown in the panel so you can tell which build Steam has loaded. Kept in sync with package.json by scripts/package.sh. */
-const VERSION = "1.3.0";
+const VERSION = "1.4.0";
 const DONATE_URL = "https://buymeacoffee.com/kromossomoc";
 const HOME_ROUTE = "/library/home";
 let settings: Settings = DEFAULT_SETTINGS;
@@ -168,6 +169,7 @@ export default definePlugin(() => {
   unloaded = false;
   routerHook.addRoute(ALL_SOFTWARE_ROUTE, AllSoftwareRoute, { exact: true });
   routerHook.addRoute(MY_PAGE_ROUTE, MyPageRoute, { exact: true });
+  loadNsoAvatar();
   // Patch only once stored settings are in, so a disabled HOME Menu never flashes on at boot.
   getSettings()
     .then((stored) => {
